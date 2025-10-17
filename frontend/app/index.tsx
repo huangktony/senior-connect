@@ -1,15 +1,8 @@
 import { Text, View } from "react-native";
+import Card from "../components/Card";
 
 export default function Index() {
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Text>Edit app/index.tsx to edit this screen.</Text>
-    </View>
+    <Card title="Laptop" body="How do I turn on my laptop?" status="Pending"/>
   );
 }
