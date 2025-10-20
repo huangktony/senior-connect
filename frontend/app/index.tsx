@@ -1,15 +1,11 @@
-import { Text, View } from "react-native";
+import React from "react";
+import { SafeAreaView } from "react-native";
+import AddCard from "../components/AddTask"; // adjust path if needed
 
 export default function Index() {
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Text>Edit app/index.tsx to edit this screen.</Text>
-    </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+      <AddCard />
+    </SafeAreaView>
   );
 }
