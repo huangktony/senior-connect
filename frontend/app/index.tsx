@@ -1,8 +1,11 @@
-import { Text, View } from "react-native";
-import Card from "../components/Card";
+import React from "react";
+import { SafeAreaView } from "react-native";
+import AddCard from "../components/AddTask"; // adjust path if needed
 
 export default function Index() {
   return (
-    <Card title="Laptop" body="How do I turn on my laptop?" status="Pending"/>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+      <AddCard />
+    </SafeAreaView>
   );
 }
