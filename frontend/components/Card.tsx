@@ -9,33 +9,22 @@ export default function Card(props: CardProps) {
             <Text style={styles.title}>{props.title}</Text>
             <Text style={styles.status}>Status: {props.status}</Text>
             <Text style={styles.description}>{props.body}</Text>
-            <Button title = "Edit info"
-                    onPress={() => setVisible(true)} />
+            <Popup ></Popup>
             <Modal
                 backdropColor="gray"
                 visible={visible}
                 animationType="fade"
                 transparent={true}
             >
-                <View style={styles.popupContainer}>
-                    <View style={styles.modal}>
-                        <Button title="Close"
-                                onPress={() => setVisible(false)}
-                        />
-                        <Popup></Popup> 
-                    </View>
-                </View>
+                
             </Modal>
         </View>
     )
 }
 interface CardProps {
-    title: string
+    title: string;
     body: string;
     status: string;
-    navigation: any;
-    route: { params: { someData: string } };
-
 }
 
 const styles = StyleSheet.create({
