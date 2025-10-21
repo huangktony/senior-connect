@@ -5,7 +5,7 @@ export default function Popup() {
     const [modalVisible, setModalVisible] = useState(false);
 
     const task = {
-        title: "task 100000",
+        title: "Edit Task",
         body: "Date:\nTime:\nLocation:\nCategory:",
     };
 
