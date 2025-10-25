@@ -1,64 +1,61 @@
 import React, { useState } from "react";
-import { Text, View, StyleSheet, Button, Modal } from "react-native";
-import Popup from "./Popup"
+import { Text, View, StyleSheet, TouchableOpacity } from "react-native";
+import Popup from "./Popup";
+import { Task } from "./types";
 
-export default function Card(props: CardProps) {
-    const [visible, setVisible] = useState(false);
-    return (
-        <View style={styles.container}>
-            <Text style={styles.title}>{props.title}</Text>
-            <Text style={styles.status}>Status: {props.status}</Text>
-            <Text style={styles.description}>{props.body}</Text>
-            <Popup ></Popup>
-            <Modal
-                backdropColor="gray"
-                visible={visible}
-                animationType="fade"
-                transparent={true}
-            >
-                
-            </Modal>
-        </View>
-    )
+interface CardProps extends Omit<Task, "body"> {
+  body: string;
+  onEdit: (task: Task) => void;
 }
-interface CardProps {
-    title: string;
-    body: string;
-    status: string;
+
+export default function Card({ id, title, body, status, onEdit }: CardProps) {
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <View style={styles.container}>
+      <TouchableOpacity onPress={() => setVisible(true)}>
+        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.status}>Status: {status}</Text>
+        <Text style={styles.description}>{body}</Text>
+      </TouchableOpacity>
+
+      {visible && (
+        <Popup
+          id={id}
+          title={title}
+          body={body}
+          status={status}
+          onClose={() => setVisible(false)}
+          onSave={(updatedTask) => {
+            onEdit(updatedTask);
+            setVisible(false);
+          }}
+        />
+      )}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        margin: 5,
-        padding: 20,
-        backgroundColor: "#ffffff",
-    },
-    title: {
-        fontSize: 20,
-        textAlign: "left"
-    },
-    status: {
-        fontSize: 15,
-        textAlign: "right",
-    },
-    description: {
-        fontSize: 15,
-        marginBottom: 2
-    },
-    popupContainer: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        justifyContent: 'center',
-        alignItems: 'center'
-    },
-    popupClose: {
-        padding: 5
-    },
-    modal: {
-        backgroundColor: 'white',
-        padding: 20,
-        borderRadius: 12,
-        width: 300,
-        elevation: 5,
-    }
-})
+  container: {
+    backgroundColor: "#fff",
+    marginBottom: 10,
+    borderRadius: 8,
+    padding: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  status: {
+    color: "#666",
+    marginBottom: 4,
+  },
+  description: {
+    color: "#444",
+  },
+});

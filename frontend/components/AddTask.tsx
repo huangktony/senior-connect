@@ -1,103 +1,64 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { View, TextInput, Button, StyleSheet } from "react-native";
 
-export default function AddCard() {
+// 👇 Define a type for the task (same structure as in Board)
+interface TaskInput {
+  title: string;
+  body: string;
+  status: string;
+}
+
+// 👇 Define what props AddTask expects
+interface AddTaskProps {
+  onAdd: (task: TaskInput) => void;
+}
+
+export default function AddTask({ onAdd }: AddTaskProps) {
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [location, setLocation] = useState("");
-  const [requestedDate, setRequestedDate] = useState("");
-  const [createdCard, setCreatedCard] = useState<any>(null);
+  const [body, setBody] = useState("");
 
-  const handleCreate = () => {
-    if (!title || !description || !location || !requestedDate) {
-      alert("Please fill out all fields before creating a card.");
-      return;
-    }
-
-    const newCard = {
-      id: Date.now().toString(),
-      title,
-      description,
-      location,
-      requestedDate,
-    };
-
-    setCreatedCard(newCard);
-    console.log("New card created:", newCard);
-
-    // clear inputs
+  const handleSubmit = () => {
+    if (!title.trim()) return;
+    onAdd({ title, body, status: "Pending" });
     setTitle("");
-    setDescription("");
-    setLocation("");
-    setRequestedDate("");
+    setBody("");
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Create a Card</Text>
-
       <TextInput
         style={styles.input}
-        placeholder="Title"
+        placeholder="Task Title"
         value={title}
         onChangeText={setTitle}
       />
       <TextInput
-        style={[styles.input, { height: 80 }]}
-        placeholder="Description"
-        value={description}
-        onChangeText={setDescription}
-        multiline
-      />
-      <TextInput
         style={styles.input}
-        placeholder="Location"
-        value={location}
-        onChangeText={setLocation}
+        placeholder="Task Description"
+        value={body}
+        onChangeText={setBody}
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Requested Date"
-        value={requestedDate}
-        onChangeText={setRequestedDate}
-      />
-
-      <TouchableOpacity style={styles.createButton} onPress={handleCreate}>
-        <Text style={styles.buttonText}>Create</Text>
-      </TouchableOpacity>
-
-      {createdCard && (
-        <View style={styles.cardPreview}>
-          <Text style={styles.previewHeader}>Created Card Object:</Text>
-          <Text>{JSON.stringify(createdCard, null, 2)}</Text>
-        </View>
-      )}
+      <Button title="Add Task" onPress={handleSubmit} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: "#fff" },
-  header: { fontSize: 22, fontWeight: "bold", marginBottom: 15 },
+  container: {
+    marginBottom: 15,
+    padding: 10,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
   input: {
     borderWidth: 1,
     borderColor: "#ccc",
-    borderRadius: 10,
-    padding: 10,
+    borderRadius: 8,
+    padding: 8,
     marginBottom: 10,
   },
-  createButton: {
-    backgroundColor: "#4CAF50",
-    padding: 12,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  buttonText: { color: "white", fontWeight: "bold", fontSize: 16 },
-  cardPreview: {
-    marginTop: 20,
-    backgroundColor: "#f5f5f5",
-    padding: 10,
-    borderRadius: 10,
-  },
-  previewHeader: { fontWeight: "bold", marginBottom: 5 },
 });
