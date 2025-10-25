@@ -1,7 +1,7 @@
 import React from "react";
 import { SafeAreaView } from "react-native";
-import AddCard from "../components/AddTask"; // adjust path if needed
-import Card from "../components/Card";
+import AddCard from "../../components/AddTask"; // adjust path if needed
+import Card from "../../components/Card";
 import { ScrollView } from "react-native";
 
 export default function Index() {
