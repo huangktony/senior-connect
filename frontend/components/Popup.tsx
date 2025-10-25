@@ -1,134 +1,124 @@
 import React, { useState } from "react";
-import { View, Text, Modal, TouchableOpacity, StyleSheet, ViewProps } from "react-native";
+import { View, TextInput, Button, StyleSheet, Modal, Text, TouchableOpacity } from "react-native";
+import { Task } from "./types";
 
-export default function Popup() {
-    const [modalVisible, setModalVisible] = useState(false);
+interface PopupProps extends Task {
+  onClose: () => void;
+  onSave: (task: Task) => void;
+}
 
-    const task = {
-        title: "Edit Task",
-        body: "Date:\nTime:\nLocation:\nCategory:",
-    };
+export default function Popup({ id, title, body, status, onClose, onSave }: PopupProps) {
+  const [newTitle, setNewTitle] = useState(title);
+  const [newBody, setNewBody] = useState(body);
+  const [newStatus, setNewStatus] = useState(status);
+  const [dropdownVisible, setDropdownVisible] = useState(false);
 
-    const openModal = () => setModalVisible(true);
-    const closeModal = () => setModalVisible(false);
+  const handleSave = () => {
+    onSave({ id, title: newTitle, body: newBody, status: newStatus });
+  };
 
-    return (
+  const handleSelect = (option: string) => {
+    setNewStatus(option);
+    setDropdownVisible(false);
+  };
+
+  return (
+    <Modal transparent animationType="slide" visible>
+      <View style={styles.overlay}>
         <View style={styles.container}>
-            <TouchableOpacity style={styles.openButton} onPress={openModal}>
-                <Text style={styles.openButtonText}>{task.title}</Text>
-            </TouchableOpacity>
-        
-        <Modal
-            animationType="fade" 
-            visible={modalVisible} 
-            transparent
-            onRequestClose={closeModal}
-        >
+          <Text style={styles.header}>Edit Task</Text>
 
-         <View style={styles.backdrop}>
-          <View style={styles.dialog}>
-            <View style={styles.contentWrap}>
-                <Text style={styles.title}>{task.title}</Text>
-                <Text style={styles.field}>Date:</Text>
-                <Text style={styles.field}>Time:</Text>
-                <Text style={styles.field}>Location:</Text>
-                <Text style={styles.field}>Category:</Text>
-            </View>
+          <TextInput
+            style={styles.input}
+            value={newTitle}
+            onChangeText={setNewTitle}
+            placeholder="Title"
+          />
 
-            <View style={styles.actions}>
-                <TouchableOpacity onPress={closeModal}>
-                    <Text style={styles.actionText}>Close</Text>
+          <TextInput
+            style={styles.input}
+            value={newBody}
+            onChangeText={setNewBody}
+            placeholder="Description"
+          />
+
+          {/* Dropdown trigger */}
+          <TouchableOpacity
+            onPress={() => setDropdownVisible(!dropdownVisible)}
+            style={[styles.input, styles.dropdownTrigger]}
+          >
+            <Text>{newStatus || "Select Status"}</Text>
+          </TouchableOpacity>
+
+          {/* Dropdown menu */}
+          {dropdownVisible && (
+            <View style={styles.dropdown}>
+              {["Pending", "In Progress", "Done"].map((option) => (
+                <TouchableOpacity key={option} onPress={() => handleSelect(option)}>
+                  <Text style={styles.option}>{option}</Text>
                 </TouchableOpacity>
+              ))}
             </View>
+          )}
+
+          <View style={styles.buttons}>
+            <Button title="Save" onPress={handleSave} />
+            <Button title="Cancel" onPress={onClose} color="red" />
           </View>
         </View>
-      </Modal>
-    </View>
-    );
+      </View>
+    </Modal>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 16,
-    backgroundColor: "transparent",
-  },
-
-  openButton: {
-    backgroundColor: "#007BFF",
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-  },
-  openButtonText: { color: "#ffffff", fontWeight: "700" },
-
-  backdrop: {
+  overlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
-    padding: 24,
   },
-
-  dialog: {
-    width: "92%",
-    maxWidth: 1000,
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 30,
-
-    alignItems: "flex-start",
-    justifyContent: "flex-start",
-    
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 8,
-    maxHeight: "80%",
+  container: {
+    width: "80%",
+    backgroundColor: "white",
+    borderRadius: 10,
+    padding: 20,
+    elevation: 5,
   },
-
-  title: {
-    fontSize: 22,
-    fontWeight: "700",
+  header: {
+    fontSize: 18,
+    fontWeight: "bold",
     marginBottom: 10,
-    color: "#111",
-    textAlign: "left",
   },
-  modalText: {
-    fontSize: 17,
-    lineHeight: 24,
-    color: "#222",
-    marginBottom: 16,
-    textAlign: "left",
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 10,
   },
-
-  actions: {
-  marginTop: 16,
-  alignSelf: "stretch",
-  flexDirection: "row",
-  justifyContent: "flex-end", // keeps Close on the right
-  alignItems: "center",
-},
-
-  actionText: { color: "#007BFF", fontWeight: "700", fontSize: 16 },
-
-contentWrap: {
-  alignSelf: "stretch",       // use full row width
-  alignItems: "flex-start",   // left-align children
-},
+  dropdownTrigger: {
+    justifyContent: "center",
+  },
+  dropdown: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    backgroundColor: "#fff",
+    marginBottom: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  option: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  buttons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
   
-field: {
-  fontSize: 16,
-  lineHeight: 24,
-  textAlign: "left",
-  color: "#333",
-},
-
-  modalContainer: { /* not used */ },
-  modalContent: { /* not used */ },
-  closeButton: { /* not used */ },
-  closeButtonText: { /* not used */ },
 });
