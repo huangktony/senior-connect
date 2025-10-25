@@ -11,6 +11,8 @@
   "include": [
     "**/*.ts",
     "**/*.tsx",
-    "../App.tsx"
-  ]
+    ".expo/types/**/*.ts",
+    ".expo/types",
+    "expo-env.d.ts"
+, "../App.tsx"  ]
 }
