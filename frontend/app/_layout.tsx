@@ -7,14 +7,13 @@ import { ActivityIndicator, View } from "react-native";
 export default function RootLayout() {
   const [user, setUser] = useState<User | null | undefined>(undefined);
   const router = useRouter();
-
+  
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
     });
     return unsubscribe;
   }, []);
-
   useEffect(() => {
     if (user === undefined) return; 
 
