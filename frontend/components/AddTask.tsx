@@ -1,10 +1,13 @@
-import React, { useState } from "react";
-import { View, TextInput, Button, StyleSheet } from "react-native";
+import React, { useState, useEffect } from "react";
+import { StyleSheet, Alert, View, TextInput, Button } from "react-native";
+import { auth } from '../firebaseConfig';
+import { onAuthStateChanged } from 'firebase/auth';
 
 // 👇 Define a type for the task (same structure as in Board)
 interface TaskInput {
   title: string;
   body: string;
+  date: string;
   status: string;
 }
 
@@ -16,14 +19,46 @@ interface AddTaskProps {
 export default function AddTask({ onAdd }: AddTaskProps) {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [date, setDate] = useState("");
+  const [userEmail, setUserEmail] = useState<String | null>("");
 
-  const handleSubmit = () => {
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUserEmail(user.email);
+      } else {
+        setUserEmail(null);
+      }
+    });
+     return () => unsubscribe();
+  });
+  const handleSubmit = async () => {
     if (!title.trim()) return;
-    onAdd({ title, body, status: "Pending" });
-    setTitle("");
-    setBody("");
-  };
-
+    try {
+    onAdd({ title, body, date, status: "Pending" });
+    fetch("http://127.0.0.1:5000/tasks", {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        "body": body,
+        "date": date,
+        "elderID": userEmail,
+        "status": "pending",
+        "title": title,
+        "category": "something",
+        "latitude": 0,
+        "longitude": 0
+      })});
+      setTitle("");
+      setBody("");
+      setDate("");
+    } catch(error : any) {
+            Alert.alert('Something happend: ' + error.message);
+      }
+  }
   return (
     <View style={styles.container}>
       <TextInput
@@ -37,6 +72,12 @@ export default function AddTask({ onAdd }: AddTaskProps) {
         placeholder="Task Description"
         value={body}
         onChangeText={setBody}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Task Date"
+        value={date}
+        onChangeText={setDate}
       />
       <Button title="Add Task" onPress={handleSubmit} />
     </View>

@@ -8,9 +8,9 @@ interface CardProps extends Omit<Task, "body"> {
   onEdit: (task: Task) => void;
 }
 
-export default function Card({ id, title, body, status, onEdit }: CardProps) {
+export default function Card({ id, title, body, status, date, onEdit }: CardProps) {
   const [visible, setVisible] = useState(false);
-
+  
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={() => setVisible(true)}>
@@ -25,6 +25,7 @@ export default function Card({ id, title, body, status, onEdit }: CardProps) {
           title={title}
           body={body}
           status={status}
+          date={date}
           onClose={() => setVisible(false)}
           onSave={(updatedTask) => {
             onEdit(updatedTask);
