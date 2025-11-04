@@ -7,15 +7,18 @@ export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLogin, setIsLogin] = useState(true);
-
+    
     const handleSubmit = async () => {
         try {
             if (isLogin) {
                 await signInWithEmailAndPassword(auth, email, password);
+                const response = await fetch(`http://127.0.0.1:5000/users/${encodeURIComponent(email)}`);
+                const data = await response.json();
+                console.log(data);
                 Alert.alert("Login Succesful!");
             } else {
                 await createUserWithEmailAndPassword(auth, email, password);
-                Alert.alert("Login Succesful!");
+                Alert.alert("Signup Succesful!");
             }
         } catch(error : any) {
             Alert.alert('Login failed', error.message);
