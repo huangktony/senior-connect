@@ -5,6 +5,7 @@ export interface Task {
   title: string;
   body: string;
   status: string;
+  date: string;
 }
 
 export type TaskInput = Omit<Task, "id">;
