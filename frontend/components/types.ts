@@ -8,4 +8,4 @@ export interface Task {
   date: string;
 }
 
-export type TaskInput = Omit<Task, "id">;
+export type TaskInput = Task;
