@@ -7,15 +7,43 @@ interface PopupProps extends Task {
   onSave: (task: Task) => void;
 }
 
-export default function Popup({ id, title, body, status, onClose, onSave }: PopupProps) {
+export default function Popup({ id, title, body, status, date, onClose, onSave }: PopupProps) {
   const [newTitle, setNewTitle] = useState(title);
   const [newBody, setNewBody] = useState(body);
   const [newStatus, setNewStatus] = useState(status);
   const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [newDate, setNewDate] = useState(date);
+  
+  const handleSave = async () => {
+  try {
+    const response = await fetch(`https://strivingly-proadoption-bronwyn.ngrok-free.dev/tasks/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: newTitle,
+        body: newBody,
+        status: newStatus,
+        date: newDate,
+      }),
+    });
 
-  const handleSave = () => {
-    onSave({ id, title: newTitle, body: newBody, status: newStatus });
-  };
+    if (!response.ok) {
+      throw new Error("Failed to update task");
+    }
+    onSave({
+      id,
+      title: newTitle,
+      body: newBody,
+      status: newStatus,
+      date: newDate
+    });
+
+    onClose();
+  } catch (error) {
+    console.error("Error updating task:", error);
+  }
+};
+
 
   const handleSelect = (option: string) => {
     setNewStatus(option);
@@ -40,6 +68,13 @@ export default function Popup({ id, title, body, status, onClose, onSave }: Popu
             value={newBody}
             onChangeText={setNewBody}
             placeholder="Description"
+          />
+
+          <TextInput
+            style={styles.input}
+            value={newDate}
+            onChangeText={setNewDate}
+            placeholder="Date"
           />
 
           {/* Dropdown trigger */}

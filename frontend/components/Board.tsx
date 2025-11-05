@@ -17,7 +17,7 @@ export default function Board() {
         onAuthStateChanged(auth, async (user) => {
           if (user) {
             const email = user.email || "";
-            const response = await fetch(`http://127.0.0.1:5000/tasks/${encodeURIComponent(email)}`);
+            const response = await fetch(`https://strivingly-proadoption-bronwyn.ngrok-free.dev/tasks/${encodeURIComponent(email)}`);
             const data = await response.json();
             setTasks(data);
           } else {
@@ -32,13 +32,17 @@ export default function Board() {
   }, [])
 
   const handleAddTask = (newTask: TaskInput) => {
-    setTasks((prev) => [...prev, { ...newTask, id: Date.now().toString() }]);
+    setTasks((prev) => [...prev, newTask]);
   };
 
   const handleEditTask = (updatedTask: Task) => {
-    setTasks((prev) =>
-      prev.map((task) => (task.id === updatedTask.id ? updatedTask : task))
-    );
+    console.log("Editing task:", updatedTask);
+  setTasks(prev =>
+    prev.map(task => {
+      console.log("Comparing", task.id, updatedTask.id);
+      return task.id === updatedTask.id ? updatedTask : task;
+    })
+  );
   };
 
   const handleLogOut = async () => {

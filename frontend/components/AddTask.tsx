@@ -2,9 +2,11 @@ import React, { useState, useEffect } from "react";
 import { StyleSheet, Alert, View, TextInput, Button } from "react-native";
 import { auth } from '../firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
+import { black } from "react-native-paper/lib/typescript/styles/themes/v2/colors";
 
 // 👇 Define a type for the task (same structure as in Board)
 interface TaskInput {
+  id: string;
   title: string;
   body: string;
   date: string;
@@ -35,8 +37,8 @@ export default function AddTask({ onAdd }: AddTaskProps) {
   const handleSubmit = async () => {
     if (!title.trim()) return;
     try {
-    onAdd({ title, body, date, status: "Pending" });
-    fetch("http://127.0.0.1:5000/tasks", {
+    
+    const response = await fetch("https://strivingly-proadoption-bronwyn.ngrok-free.dev/tasks", {
       method: 'POST',
       headers: {
           'Content-Type': 'application/json',
@@ -55,6 +57,8 @@ export default function AddTask({ onAdd }: AddTaskProps) {
       setTitle("");
       setBody("");
       setDate("");
+      const data = await response.json();
+      onAdd({ id: data.id, title, body, date, status: "Pending" });
     } catch(error : any) {
             Alert.alert('Something happend: ' + error.message);
       }
@@ -98,6 +102,7 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: "#ccc",
+    color: "#000",
     borderRadius: 8,
     padding: 8,
     marginBottom: 10,

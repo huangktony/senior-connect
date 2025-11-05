@@ -9,14 +9,25 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color, size }) => <Ionicons name="home" color={color} size={size} />,
+          tabBarLabelStyle: {fontSize: 10, },
+          tabBarIcon: ({ color, size }) => <Ionicons name="home" color={color} size={size * 0.8} />,
+          
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="Profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color, size }) => <Ionicons name="person" color={color} size={size} />,
+          tabBarLabelStyle: {fontSize: 10, },
+          tabBarIcon: ({ color, size }) => <Ionicons name="person" color={color} size={size * 0.8} />,
+        }}
+      />
+      <Tabs.Screen
+        name="Chat"
+        options={{
+          title: "Voice Assitant",
+          tabBarLabelStyle: {fontSize: 10, },
+          tabBarIcon: ({ color, size }) => <Ionicons name="sparkles" color={color} size={size * 0.8} />,
         }}
       />
     </Tabs>
