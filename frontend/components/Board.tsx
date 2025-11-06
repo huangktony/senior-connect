@@ -1,14 +1,35 @@
-import React, { useState } from "react";
-import { View, FlatList, StyleSheet } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, FlatList, StyleSheet, Button, Alert } from "react-native";
 import AddTask from "./AddTask";
 import Card from "./Card";
 import { Task, TaskInput } from "./types";
+import { auth } from '../firebaseConfig'; 
+import { signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { useRouter } from "expo-router";
 
 export default function Board() {
-  const [tasks, setTasks] = useState<Task[]>([
-    { id: "1", title: "Buy groceries", body: "Milk, Eggs, Bread", status: "Pending" },
-    { id: "2", title: "Call doctor", body: "Schedule appointment", status: "Done" },
-  ]);
+  const router = useRouter();
+  const [tasks, setTasks] = useState<Task[]>([]);
+  
+  useEffect( () => {
+    const fetchTasks = async () => {
+      try {
+        onAuthStateChanged(auth, async (user) => {
+          if (user) {
+            const email = user.email || "";
+            const response = await fetch(`http://127.0.0.1:5000/tasks/${encodeURIComponent(email)}`);
+            const data = await response.json();
+            setTasks(data);
+          } else {
+            console.log("No user is currently signed in.");
+          }
+        });
+      } catch(error : any) {
+        Alert.alert('Something happend: ' + error.message);
+      }
+    }
+    fetchTasks();
+  }, [])
 
   const handleAddTask = (newTask: TaskInput) => {
     setTasks((prev) => [...prev, { ...newTask, id: Date.now().toString() }]);
@@ -20,6 +41,15 @@ export default function Board() {
     );
   };
 
+  const handleLogOut = async () => {
+    try {
+      await signOut(auth);
+      console.log('User signed out successfully!');
+      router.replace('/Login');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  }
   return (
     <View style={styles.container}>
       <AddTask onAdd={handleAddTask} />
@@ -32,11 +62,13 @@ export default function Board() {
             title={item.title}
             body={item.body}
             status={item.status}
+            date={item.date}
             onEdit={handleEditTask}
           />
         )}
         contentContainerStyle={{ paddingBottom: 40 }}
       />
+      <Button title="Logout" onPress={handleLogOut}></Button>
     </View>
   );
 }
