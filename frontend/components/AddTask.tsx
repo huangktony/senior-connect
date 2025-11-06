@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { StyleSheet, Alert, View, TextInput, Button } from "react-native";
 import { auth } from '../firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
-import { black } from "react-native-paper/lib/typescript/styles/themes/v2/colors";
 
 // 👇 Define a type for the task (same structure as in Board)
 interface TaskInput {

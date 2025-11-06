@@ -12,9 +12,6 @@ export default function Login() {
         try {
             if (isLogin) {
                 await signInWithEmailAndPassword(auth, email, password);
-                const response = await fetch(`http://127.0.0.1:5000/users/${encodeURIComponent(email)}`);
-                const data = await response.json();
-                console.log(data);
                 Alert.alert("Login Succesful!");
             } else {
                 await createUserWithEmailAndPassword(auth, email, password);

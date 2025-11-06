@@ -5,7 +5,7 @@ from firebase_admin import credentials, auth, firestore
 from get_best_tasks import find_best_tasks
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 cred = credentials.Certificate("serviceAccountKey.json")
 firebase_admin.initialize_app(cred)
@@ -39,6 +39,8 @@ def get_tasks(email):
     if not user_doc:
         return jsonify({'error': 'User not found'}), 404
     user_data = user_doc.get().to_dict()
+    if not user_data:
+        return jsonify({"error": f"No user found with email {email}"}), 404
     role = user_data.get('role', 'elder')
     if role == 'volunteer':
         tasks_ref = db.collection('tasks')

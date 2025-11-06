@@ -4,11 +4,9 @@ import AddTask from "./AddTask";
 import Card from "./Card";
 import { Task, TaskInput } from "./types";
 import { auth } from '../firebaseConfig'; 
-import { signOut, onAuthStateChanged, User } from 'firebase/auth';
-import { useRouter } from "expo-router";
+import { onAuthStateChanged } from 'firebase/auth';
 
 export default function Board() {
-  const router = useRouter();
   const [tasks, setTasks] = useState<Task[]>([]);
   
   useEffect( () => {
@@ -17,7 +15,7 @@ export default function Board() {
         onAuthStateChanged(auth, async (user) => {
           if (user) {
             const email = user.email || "";
-            const response = await fetch(`https://strivingly-proadoption-bronwyn.ngrok-free.dev/tasks/${encodeURIComponent(email)}`);
+            const response = await fetch(`https://strivingly-proadoption-bronwyn.ngrok-free.dev/tasks/${encodeURIComponent(email)}`); //FIIIX THISS
             const data = await response.json();
             setTasks(data);
           } else {
@@ -45,15 +43,6 @@ export default function Board() {
   );
   };
 
-  const handleLogOut = async () => {
-    try {
-      await signOut(auth);
-      console.log('User signed out successfully!');
-      router.replace('/Login');
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
-  }
   return (
     <View style={styles.container}>
       <AddTask onAdd={handleAddTask} />
@@ -72,7 +61,6 @@ export default function Board() {
         )}
         contentContainerStyle={{ paddingBottom: 40 }}
       />
-      <Button title="Logout" onPress={handleLogOut}></Button>
     </View>
   );
 }
