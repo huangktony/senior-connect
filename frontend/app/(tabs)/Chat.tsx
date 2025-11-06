@@ -1,11 +1,12 @@
 import React from "react";
 import { Provider as PaperProvider } from "react-native-paper";
-import Board from "../../components/Board";
+import Assistant from "../../components/Assistant";
+import {Text} from 'react-native';
 
 export default function Chat() {
   return (
     <PaperProvider>
-      <Board />
+      <Text>Hello</Text>
     </PaperProvider>
   );
 }

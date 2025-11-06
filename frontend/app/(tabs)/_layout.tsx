@@ -10,16 +10,8 @@ export default function TabsLayout() {
         options={{
           title: "Home",
           tabBarLabelStyle: {fontSize: 10, },
-          tabBarIcon: ({ color, size }) => <Ionicons name="home" color={color} size={size * 0.8} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="home" color={color} size={size} />,
           
-        }}
-      />
-      <Tabs.Screen
-        name="Profile"
-        options={{
-          title: "Profile",
-          tabBarLabelStyle: {fontSize: 10, },
-          tabBarIcon: ({ color, size }) => <Ionicons name="person" color={color} size={size * 0.8} />,
         }}
       />
       <Tabs.Screen
@@ -27,7 +19,15 @@ export default function TabsLayout() {
         options={{
           title: "Voice Assitant",
           tabBarLabelStyle: {fontSize: 10, },
-          tabBarIcon: ({ color, size }) => <Ionicons name="sparkles" color={color} size={size * 0.8} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="sparkles" color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="Profile"
+        options={{
+          title: "Profile",
+          tabBarLabelStyle: {fontSize: 10, },
+          tabBarIcon: ({ color, size }) => <Ionicons name="person" color={color} size={size} />,
         }}
       />
     </Tabs>
