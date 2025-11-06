@@ -7,7 +7,6 @@ import { app } from "../firebaseConfig"; // adjust if your path differs
 export default function RootLayout() {
   const [user, setUser] = useState<User | null | undefined>(undefined);
   const router = useRouter();
-  const auth = getAuth(app);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -15,7 +14,6 @@ export default function RootLayout() {
     });
     return unsubscribe;
   }, []);
-
   useEffect(() => {
     if (user === undefined) return; // still checking
 
