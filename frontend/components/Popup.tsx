@@ -5,27 +5,54 @@ import { Task } from "./types";
 interface PopupProps extends Task {
   onClose: () => void;
   onSave: (task: Task) => void;
+  onDelete?: (taskId: string) => void;
 }
 
-export default function Popup({ id, title, body, status, date, onClose, onSave }: PopupProps) {
+export default function Popup({ id, title, body, status, date, onClose, onSave, onDelete }: PopupProps) {
   const [newTitle, setNewTitle] = useState(title);
   const [newBody, setNewBody] = useState(body);
   const [newStatus, setNewStatus] = useState(status);
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [newDate, setNewDate] = useState(date);
   
+  const handleDelete = async () => {
+    try {
+      const response = await fetch(`https://strivingly-proadoption-bronwyn.ngrok-free.dev/tasks/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "69420"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete task");
+      }
+
+      if (onDelete) {
+        onDelete(id);
+      }
+      onClose();
+    } catch (error) {
+      console.error("Error deleting task:", error);
+    }
+  };
+
   const handleSave = async () => {
-  try {
-    const response = await fetch(`https://strivingly-proadoption-bronwyn.ngrok-free.dev/tasks/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: newTitle,
-        body: newBody,
-        status: newStatus,
-        date: newDate,
-      }),
-    });
+    try {
+      const response = await fetch(`https://strivingly-proadoption-bronwyn.ngrok-free.dev/tasks/${id}`, {
+        method: "PATCH",
+        headers: { 
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "69420"
+        },
+        body: JSON.stringify({
+          title: newTitle,
+          body: newBody,
+          status: newStatus,
+          date: newDate,
+        }),
+      });
 
     if (!response.ok) {
       throw new Error("Failed to update task");
@@ -88,7 +115,7 @@ export default function Popup({ id, title, body, status, date, onClose, onSave }
           {/* Dropdown menu */}
           {dropdownVisible && (
             <View style={styles.dropdown}>
-              {["Pending", "In Progress", "Done"].map((option) => (
+              {["Pending", "Accepted", "Completed"].map((option) => (
                 <TouchableOpacity key={option} onPress={() => handleSelect(option)}>
                   <Text style={styles.option}>{option}</Text>
                 </TouchableOpacity>
@@ -98,7 +125,8 @@ export default function Popup({ id, title, body, status, date, onClose, onSave }
 
           <View style={styles.buttons}>
             <Button title="Save" onPress={handleSave} />
-            <Button title="Cancel" onPress={onClose} color="red" />
+            <Button title="Cancel" onPress={onClose} color="gray" />
+            <Button title="Delete" onPress={handleDelete} color="red" />
           </View>
         </View>
       </View>
