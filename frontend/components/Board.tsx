@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, FlatList, StyleSheet, Button, Alert } from "react-native";
+import { View, FlatList, StyleSheet, Button, Alert, Text, ScrollView } from "react-native";
 import AddTask from "./AddTask";
 import Card from "./Card";
 import { Task, TaskInput } from "./types";
@@ -8,46 +8,82 @@ import { onAuthStateChanged } from 'firebase/auth';
 
 export default function Board() {
   const [tasks, setTasks] = useState<Task[]>([]);
-  
-  useEffect( () => {
-    const fetchTasks = async () => {
-      try {
-        onAuthStateChanged(auth, async (user) => {
-          if (user) {
-            const email = user.email || "";
-            const response = await fetch(`https://strivingly-proadoption-bronwyn.ngrok-free.dev/tasks/${encodeURIComponent(email)}`); //FIIIX THISS
-            const data = await response.json();
-            setTasks(data);
-          } else {
-            console.log("No user is currently signed in.");
-          }
-        });
-      } catch(error : any) {
-        Alert.alert('Something happend: ' + error.message);
-      }
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  const refreshTasks = async (email?: string | null) => {
+    const e = email ?? userEmail;
+    if (!e) return;
+    try {
+      const response = await fetch(
+        `https://strivingly-proadoption-bronwyn.ngrok-free.dev/tasks/${encodeURIComponent(e)}`,
+        {
+          method: "GET",
+          headers: new Headers({ "ngrok-skip-browser-warning": "69420" }),
+        }
+      );
+      const data = await response.json();
+      // Normalize status values for consistent grouping
+      const normalized = data.map((t: any) => ({
+        ...t,
+        status: (t.status || "").toString(),
+      }));
+      setTasks(normalized);
+    } catch (error: any) {
+      Alert.alert("Something happened: " + (error.message || error));
     }
-    fetchTasks();
-  }, [])
+  };
 
-  const handleAddTask = (newTask: TaskInput) => {
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setUserEmail(user.email ?? null);
+        await refreshTasks(user.email ?? null);
+      } else {
+        setUserEmail(null);
+        setTasks([]);
+      }
+    });
+    return unsubscribe;
+  }, []);
+
+  const handleAddTask = async (newTask: TaskInput) => {
+    // optimistic update
     setTasks((prev) => [...prev, newTask]);
+    // refresh from server to ensure authoritative state (will noop if userEmail missing)
+    await refreshTasks();
   };
 
-  const handleEditTask = (updatedTask: Task) => {
+  const handleDeleteTask = async (taskId: string) => {
+    // optimistic remove
+    setTasks((prev) => prev.filter((task) => task.id !== taskId));
+    // refresh from server
+    await refreshTasks();
+  };
+
+  const handleEditTask = async (updatedTask: Task) => {
     console.log("Editing task:", updatedTask);
-  setTasks(prev =>
-    prev.map(task => {
-      console.log("Comparing", task.id, updatedTask.id);
-      return task.id === updatedTask.id ? updatedTask : task;
-    })
-  );
+    setTasks((prev) =>
+      prev.map((task) => {
+        console.log("Comparing", task.id, updatedTask.id);
+        return task.id === updatedTask.id ? updatedTask : task;
+      })
+    );
+    // refresh to get authoritative server state
+    await refreshTasks();
   };
 
-  return (
-    <View style={styles.container}>
-      <AddTask onAdd={handleAddTask} />
+  const pendingTasks = tasks.filter(task => task.status.toLowerCase() === "pending");
+  const acceptedTasks = tasks.filter(task => task.status.toLowerCase() === "accepted");
+  const doneTasks = tasks.filter(task => task.status.toLowerCase() === "completed");
+
+  const renderTaskList = (sectionTasks: Task[], sectionTitle: string) => (
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>{sectionTitle}</Text>
+        <Text style={styles.taskCount}>{sectionTasks.length}</Text>
+      </View>
       <FlatList
-        data={tasks}
+        data={sectionTasks}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <Card
@@ -57,10 +93,22 @@ export default function Board() {
             status={item.status}
             date={item.date}
             onEdit={handleEditTask}
+            onDelete={handleDeleteTask}
           />
         )}
-        contentContainerStyle={{ paddingBottom: 40 }}
+        scrollEnabled={false}
       />
+    </View>
+  );
+
+  return (
+    <View style={styles.container}>
+      <AddTask onAdd={handleAddTask} />
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {renderTaskList(pendingTasks, "Pending Tasks")}
+        {renderTaskList(acceptedTasks, "Accepted Tasks")}
+        {renderTaskList(doneTasks, "Completed Tasks")}
+      </ScrollView>
     </View>
   );
 }
@@ -68,7 +116,33 @@ export default function Board() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 12,
     backgroundColor: "#f3f4f6",
+  },
+  scrollContainer: {
+    padding: 12,
+    paddingBottom: 40,
+  },
+  section: {
+    marginBottom: 20,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    paddingHorizontal: 4,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#374151',
+    flex: 1,
+  },
+  taskCount: {
+    backgroundColor: '#e5e7eb',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    color: '#4b5563',
+    fontSize: 14,
   },
 });

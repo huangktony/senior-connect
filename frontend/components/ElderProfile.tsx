@@ -29,7 +29,15 @@ export default function ElderProfile() {
 
   const fetchUserInfo = async (email: string) => {
     try {
-      const response = await fetch(`https://strivingly-proadoption-bronwyn.ngrok-free.dev/users/${encodeURIComponent(email)}`);
+      const response = await fetch(
+        `https://strivingly-proadoption-bronwyn.ngrok-free.dev/users/${encodeURIComponent(email)}`,
+        {
+          method: 'GET',
+          headers: {
+            'ngrok-skip-browser-warning': '69420'
+          }
+        }
+      );
       const data = await response.json();
       setUserInfo({
         firstName: data.firstName,
@@ -44,11 +52,19 @@ export default function ElderProfile() {
 
   const fetchTaskStats = async (email: string) => {
     try {
-      const response = await fetch(`https://strivingly-proadoption-bronwyn.ngrok-free.dev/tasks/${encodeURIComponent(email)}`);
+      const response = await fetch(
+        `https://strivingly-proadoption-bronwyn.ngrok-free.dev/tasks/${encodeURIComponent(email)}`,
+        {
+          method: 'GET',
+          headers: {
+            'ngrok-skip-browser-warning': '69420'
+          }
+        }
+      );
       const data = await response.json();
-      const pending = data.filter((t: any) => t.status === "Pending").length;
-      const accepted = data.filter((t: any) => t.status === "Accepted").length;
-      const done = data.filter((t: any) => t.status === "Done").length;
+      const pending = data.filter((t: any) => t.status.toLowerCase() === "pending").length;
+      const accepted = data.filter((t: any) => t.status.toLowerCase() === "accepted").length;
+      const done = data.filter((t: any) => t.status.toLowerCase() === "completed").length;
       setTaskStats({ total: data.length, pending, accepted, done });
     } catch (err) {
       console.error("Error fetching task stats:", err);
@@ -64,8 +80,11 @@ export default function ElderProfile() {
     if (!userEmail) return;
     try {
       const response = await fetch(`https://strivingly-proadoption-bronwyn.ngrok-free.dev/users/${encodeURIComponent(userEmail)}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: "PATCH",
+        headers: { 
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "69420"
+        },
         body: JSON.stringify(userInfo),
       });
       if (!response.ok) throw new Error("Failed to update profile");
