@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Stack, useRouter } from "expo-router";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { auth } from "../firebaseConfig";
+import { auth } from "./firebaseConfig";
 import { ActivityIndicator, View } from "react-native";
 
 export default function RootLayout() {
