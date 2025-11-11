@@ -105,7 +105,7 @@ export default function Popup({ id, title, body, status, volunteerID, date, onCl
           <Text style={styles.pendingMsg}>{status}</Text>
 
           {/* Volunteer info for Accepted/Completed */}
-          {showVolunteer && (
+          {(showVolunteer && status.toLowerCase() !== "pending") && (
             <View style={styles.volunteerBox}>
               <Text style={styles.volunteerHeader}>{status == "accepted" ? "Accepted by:" : "Completed by"}</Text>
               {loadingVolunteer ? (
