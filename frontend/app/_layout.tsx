@@ -2,7 +2,7 @@ import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, getAuth, User } from "firebase/auth";
 import { View, ActivityIndicator } from "react-native";
-import { app } from "../firebaseConfig"; // adjust if your path differs
+import { auth } from "../firebaseConfig"; // adjust if your path differs
 
 export default function RootLayout() {
   const [user, setUser] = useState<User | null | undefined>(undefined);
@@ -20,7 +20,7 @@ export default function RootLayout() {
     if (user === null) {
       router.replace("/"); // go to Login (index.tsx)
     } else {
-      router.replace("/board"); // go to your main board page
+      router.replace("/(tabs)"); // go to your main board page
     }
   }, [user]);
 

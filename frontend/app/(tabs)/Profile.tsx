@@ -1,12 +1,15 @@
 import React from "react";
 import { Provider as PaperProvider } from "react-native-paper";
 import ElderProfile from "../../components/ElderProfile";
-import {Text} from 'react-native';
+import { SafeAreaView } from "react-native-safe-area-context";
+
 
 export default function Profile() {
   return (
-    <PaperProvider>
-      <ElderProfile />
-    </PaperProvider>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#f3f4f6" }}>
+      <PaperProvider>
+        <ElderProfile />
+      </PaperProvider>
+    </SafeAreaView>
   );
 }
