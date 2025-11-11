@@ -5,10 +5,12 @@ import { onAuthStateChanged } from 'firebase/auth';
 
 // 👇 Define a type for the task (same structure as in Board)
 interface TaskInput {
+  id: string;
   title: string;
   body: string;
   date: string;
   status: string;
+  volunteerID: string;
 }
 
 // 👇 Define what props AddTask expects
@@ -35,12 +37,13 @@ export default function AddTask({ onAdd }: AddTaskProps) {
   const handleSubmit = async () => {
     if (!title.trim()) return;
     try {
-    onAdd({ title, body, date, status: "Pending" });
-    fetch("http://127.0.0.1:5000/tasks", {
+    
+    const response = await fetch("https://strivingly-proadoption-bronwyn.ngrok-free.dev/tasks", {
       method: 'POST',
       headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
+          'ngrok-skip-browser-warning': '69420',
       },
       body: JSON.stringify({
         "body": body,
@@ -55,6 +58,8 @@ export default function AddTask({ onAdd }: AddTaskProps) {
       setTitle("");
       setBody("");
       setDate("");
+      const data = await response.json();
+      onAdd({ id: data.id, title, body, date, status: "Pending" , volunteerID: data.volunteerID});
     } catch(error : any) {
             Alert.alert('Something happend: ' + error.message);
       }
@@ -98,6 +103,7 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: "#ccc",
+    color: "#000",
     borderRadius: 8,
     padding: 8,
     marginBottom: 10,
