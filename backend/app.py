@@ -1,11 +1,13 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from werkzeug.middleware.proxy_fix import ProxyFix
 import firebase_admin
 from firebase_admin import credentials, auth, firestore
 from get_best_tasks import find_best_tasks
 
 app = Flask(__name__)
-CORS(app)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 cred = credentials.Certificate("serviceAccountKey.json")
 firebase_admin.initialize_app(cred)
@@ -39,6 +41,8 @@ def get_tasks(email):
     if not user_doc:
         return jsonify({'error': 'User not found'}), 404
     user_data = user_doc.get().to_dict()
+    if not user_data:
+        return jsonify({"error": f"No user found with email {email}"}), 404
     role = user_data.get('role', 'elder')
     if role == 'volunteer':
         tasks_ref = db.collection('tasks')
@@ -90,7 +94,13 @@ def get_user(email):
 @app.route('/users/<email>', methods=['PATCH'])
 def update_user(email):
     data = request.get_json()
-    db.collection('tasks').document.where('email','==', email)
+    user_ref = db.collection('users').document(email)
+    user_ref.update({
+        'firstName': data.get('firstName'),
+        'lastName': data.get('lastName'),
+        'latitude': data.get('latitude'),
+        'longitude': data.get('longitude')
+    })
     return jsonify({'message': 'User updated successfully!'})
 
 @app.route('/users/<email>', methods=['DELETE'])

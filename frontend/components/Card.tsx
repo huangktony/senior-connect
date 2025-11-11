@@ -6,9 +6,10 @@ import { Task } from "./types";
 interface CardProps extends Omit<Task, "body"> {
   body: string;
   onEdit: (task: Task) => void;
+  onDelete: (taskId: string) => void;
 }
 
-export default function Card({ id, title, body, status, date, onEdit }: CardProps) {
+export default function Card({ id, title, body, status, date, onEdit, onDelete, volunteerID }: CardProps) {
   const [visible, setVisible] = useState(false);
   
   return (
@@ -26,7 +27,9 @@ export default function Card({ id, title, body, status, date, onEdit }: CardProp
           body={body}
           status={status}
           date={date}
+          volunteerID={volunteerID}
           onClose={() => setVisible(false)}
+          onDelete={onDelete}
           onSave={(updatedTask) => {
             onEdit(updatedTask);
             setVisible(false);

@@ -6,6 +6,7 @@ export interface Task {
   body: string;
   status: string;
   date: string;
+  volunteerID: string;
 }
 
-export type TaskInput = Omit<Task, "id">;
+export type TaskInput = Task;
