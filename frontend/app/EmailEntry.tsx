@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
-import { fetchSignInMethodsForEmail } from "firebase/auth";import { router } from "expo-router";
+import { fetchSignInMethodsForEmail } from "firebase/auth";
+import { router } from "expo-router";
 import { auth } from "../firebaseConfig";
 
 export default function EmailEntry() {
@@ -8,39 +9,35 @@ export default function EmailEntry() {
   const [loading, setLoading] = useState(false);
 
   const handleNext = async () => {
-    if (!email.trim()) return Alert.alert("Enter your email.");
-    setLoading(true);
+  if (!email.trim()) return Alert.alert("Please enter your email.");
+  setLoading(true);
 
-    try {
-      const normalizedEmail = email.trim().toLowerCase();
-      console.log("Fetching methods for:", normalizedEmail);
-      const methods = await fetchSignInMethodsForEmail(auth, normalizedEmail);
-      console.log("Result:", methods);
-      console.log("Sign-in methods for", email, ":", methods);
+  try {
+    const normalizedEmail = email.trim().toLowerCase();
+    console.log("📨 Checking Firebase for:", normalizedEmail);
+    console.log("🔥 Using Firebase project:", auth.app.options.projectId);
+    console.log("🔑 API key:", auth.app.options.apiKey);
 
-      // Case 1: account exists with password
-      console.log("Methods:", methods);
-      if (methods && methods.includes("password")) {
-        router.push({ pathname: "/auth/loginPassword", params: { email } });
-      } 
-      // Case 2: account exists but through another provider (like Google)
-      else if (methods && methods.length > 0) {
-        Alert.alert(
-          "Account already exists",
-          `This email is linked with ${methods.join(", ")}. Please sign in using that method.`
-        );
-      } 
-      // Case 3: no account found — double-check existence
-      // Case 3: no account found
-      else {
-        router.push({ pathname: "/auth/signupPassword", params: { email } });
-      }
-    } catch (err: any) {
-      Alert.alert("Error", err.message);
-    } finally {
-      setLoading(false);
+    const methods = await fetchSignInMethodsForEmail(auth, normalizedEmail);
+    console.log("✅ Firebase returned methods:", methods);
+
+    if (methods.includes("password")) {
+      console.log("✅ Existing account found → going to loginPassword");
+      router.push({ pathname: "/auth/loginPassword", params: { email: normalizedEmail } });
+    } else if (methods.length > 0) {
+      console.log("⚠️ Found other auth providers:", methods);
+      Alert.alert("Account exists with another method", methods.join(", "));
+    } else {
+      console.log("🆕 No account found → going to signupPassword");
+      router.push({ pathname: "/auth/signupPassword", params: { email: normalizedEmail } });
     }
-  };
+  } catch (error: any) {
+    console.error("❌ Error fetching methods:", error);
+    Alert.alert("Error", error.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <View style={styles.container}>
