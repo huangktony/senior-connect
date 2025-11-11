@@ -2,7 +2,7 @@ import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, getAuth, User } from "firebase/auth";
 import { View, ActivityIndicator } from "react-native";
-import { app } from "../firebaseConfig"; // adjust if your path differs
+import { auth } from "../firebaseConfig"; // adjust if your path differs
 
 export default function RootLayout() {
   const [user, setUser] = useState<User | null | undefined>(undefined);
