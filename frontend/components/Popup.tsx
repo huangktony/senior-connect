@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View, TextInput, Button, StyleSheet, Modal, Text, TouchableOpacity } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, TextInput, Button, StyleSheet, Modal, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Task } from "./types";
 
 interface PopupProps extends Task {
@@ -8,13 +8,34 @@ interface PopupProps extends Task {
   onDelete?: (taskId: string) => void;
 }
 
-export default function Popup({ id, title, body, status, date, onClose, onSave, onDelete }: PopupProps) {
+export default function Popup({ id, title, body, status, volunteerID, date, onClose, onSave, onDelete }: PopupProps) {
   const [newTitle, setNewTitle] = useState(title);
   const [newBody, setNewBody] = useState(body);
-  const [newStatus, setNewStatus] = useState(status);
-  const [dropdownVisible, setDropdownVisible] = useState(false);
   const [newDate, setNewDate] = useState(date);
-  
+  const [volunteerInfo, setVolunteerInfo] = useState<any>(null);
+  const [loadingVolunteer, setLoadingVolunteer] = useState(false);
+
+  useEffect(() => {
+    async function fetchVolunteerInfo() {
+      if ((status.toLowerCase() === "accepted" || status.toLowerCase() === "completed") && volunteerID) {
+        setLoadingVolunteer(true);
+        try {
+          const res = await fetch(`https://strivingly-proadoption-bronwyn.ngrok-free.dev/users/${encodeURIComponent(volunteerID)}`, {
+            method: "GET",
+            headers: { "ngrok-skip-browser-warning": "69420" }
+          });
+          const data = await res.json();
+          setVolunteerInfo(data);
+        } catch {
+          setVolunteerInfo(null);
+        } finally {
+          setLoadingVolunteer(false);
+        }
+      }
+    }
+    fetchVolunteerInfo();
+  }, [volunteerID, status]);
+
   const handleDelete = async () => {
     try {
       const response = await fetch(`https://strivingly-proadoption-bronwyn.ngrok-free.dev/tasks/${id}`, {
@@ -24,14 +45,8 @@ export default function Popup({ id, title, body, status, date, onClose, onSave, 
           "ngrok-skip-browser-warning": "69420"
         }
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete task");
-      }
-
-      if (onDelete) {
-        onDelete(id);
-      }
+      if (!response.ok) throw new Error("Failed to delete task");
+      if (onDelete) onDelete(id);
       onClose();
     } catch (error) {
       console.error("Error deleting task:", error);
@@ -42,89 +57,78 @@ export default function Popup({ id, title, body, status, date, onClose, onSave, 
     try {
       const response = await fetch(`https://strivingly-proadoption-bronwyn.ngrok-free.dev/tasks/${id}`, {
         method: "PATCH",
-        headers: { 
-          "Content-Type": "application/json",
-          "ngrok-skip-browser-warning": "69420"
-        },
-        body: JSON.stringify({
-          title: newTitle,
-          body: newBody,
-          status: newStatus,
-          date: newDate,
-        }),
+        headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "69420" },
+        body: JSON.stringify({ title: newTitle, body: newBody, status: status, date: newDate }),
       });
-
-    if (!response.ok) {
-      throw new Error("Failed to update task");
+      if (!response.ok) throw new Error("Failed to update task");
+      onSave({ id, title: newTitle, body: newBody, status: status, date: newDate, volunteerID });
+      onClose();
+    } catch (error) {
+      console.error("Error updating task:", error);
     }
-    onSave({
-      id,
-      title: newTitle,
-      body: newBody,
-      status: newStatus,
-      date: newDate
-    });
-
-    onClose();
-  } catch (error) {
-    console.error("Error updating task:", error);
-  }
-};
-
-
-  const handleSelect = (option: string) => {
-    setNewStatus(option);
-    setDropdownVisible(false);
   };
 
+
+  const lowerStatus = status.toLowerCase();
+  const isEditable = lowerStatus === "pending";
+  const showVolunteer = true;
+  
   return (
     <Modal transparent animationType="slide" visible>
       <View style={styles.overlay}>
         <View style={styles.container}>
-          <Text style={styles.header}>Edit Task</Text>
+          <Text style={styles.header}>Task Details</Text>
 
+          {/* Editable for Pending, read-only for Accepted/Completed */}
           <TextInput
             style={styles.input}
-            value={newTitle}
-            onChangeText={setNewTitle}
+            value={isEditable ? newTitle : title}
+            onChangeText={isEditable ? setNewTitle : undefined}
             placeholder="Title"
+            editable={isEditable}
           />
-
           <TextInput
             style={styles.input}
-            value={newBody}
-            onChangeText={setNewBody}
+            value={isEditable ? newBody : body}
+            onChangeText={isEditable ? setNewBody : undefined}
             placeholder="Description"
+            editable={isEditable}
           />
-
           <TextInput
             style={styles.input}
-            value={newDate}
-            onChangeText={setNewDate}
+            value={isEditable ? newDate : date}
+            onChangeText={isEditable ? setNewDate : undefined}
             placeholder="Date"
+            editable={isEditable}
           />
 
-          {/* Dropdown trigger */}
-          <TouchableOpacity
-            onPress={() => setDropdownVisible(!dropdownVisible)}
-            style={[styles.input, styles.dropdownTrigger]}
-          >
-            <Text>{newStatus || "Select Status"}</Text>
-          </TouchableOpacity>
+          <Text style={styles.pendingMsg}>{status}</Text>
 
-          {/* Dropdown menu */}
-          {dropdownVisible && (
-            <View style={styles.dropdown}>
-              {["Pending", "Accepted", "Completed"].map((option) => (
-                <TouchableOpacity key={option} onPress={() => handleSelect(option)}>
-                  <Text style={styles.option}>{option}</Text>
-                </TouchableOpacity>
-              ))}
+          {/* Volunteer info for Accepted/Completed */}
+          {showVolunteer && (
+            <View style={styles.volunteerBox}>
+              <Text style={styles.volunteerHeader}>{status == "accepted" ? "Accepted by:" : "Completed by"}</Text>
+              {loadingVolunteer ? (
+                <ActivityIndicator size="small" />
+              ) : volunteerInfo ? (
+                <>
+                  <Text style={styles.volunteerName}>{volunteerInfo.firstName} {volunteerInfo.lastName}</Text>
+                  <Text>Email: {volunteerInfo.email}</Text>
+                  <Text>Location: {volunteerInfo.latitude}, {volunteerInfo.longitude}</Text>
+                </>
+              ) : (
+                <Text>Volunteer info not found.</Text>
+              )}
             </View>
           )}
 
+          {/* Pending: show message if no volunteer */}
+          {isEditable && !volunteerID && (
+            <Text style={styles.pendingMsg}>No volunteer has accepted yet.</Text>
+          )}
+
           <View style={styles.buttons}>
-            <Button title="Save" onPress={handleSave} />
+            {isEditable && <Button title="Save" onPress={handleSave} />}
             <Button title="Cancel" onPress={onClose} color="gray" />
             <Button title="Delete" onPress={handleDelete} color="red" />
           </View>
@@ -183,5 +187,27 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
   },
-  
+  statusText: {
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  pendingMsg: {
+    color: "#888",
+    marginBottom: 10,
+    fontStyle: "italic",
+  },
+  volunteerBox: {
+    backgroundColor: "#f3f4f6",
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 10,
+  },
+  volunteerHeader: {
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
+  volunteerName: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
 });
