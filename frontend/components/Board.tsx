@@ -92,6 +92,7 @@ export default function Board() {
             body={item.body}
             status={item.status}
             date={item.date}
+            volunteerID={item.volunteerID}
             onEdit={handleEditTask}
             onDelete={handleDeleteTask}
           />

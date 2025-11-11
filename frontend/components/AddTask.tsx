@@ -10,6 +10,7 @@ interface TaskInput {
   body: string;
   date: string;
   status: string;
+  volunteerID: string;
 }
 
 // 👇 Define what props AddTask expects
@@ -58,7 +59,7 @@ export default function AddTask({ onAdd }: AddTaskProps) {
       setBody("");
       setDate("");
       const data = await response.json();
-      onAdd({ id: data.id, title, body, date, status: "Pending" });
+      onAdd({ id: data.id, title, body, date, status: "Pending" , volunteerID: data.volunteerID});
     } catch(error : any) {
             Alert.alert('Something happend: ' + error.message);
       }
