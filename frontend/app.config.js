@@ -4,6 +4,9 @@ export default {
   expo: {
     name: "Senior Connect",
     slug: "senior-connect",
+    android: {
+      package: "com.anonymous.seniorconnect"
+    },
     extra: {
       firebase: {
         apiKey: process.env.API_KEY,
