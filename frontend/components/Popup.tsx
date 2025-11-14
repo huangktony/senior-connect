@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, TextInput, Button, StyleSheet, Modal, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Task } from "./types";
+import DateTimePickerField from "./DateTimePicker";
 
 interface PopupProps extends Task {
   onClose: () => void;
@@ -94,12 +95,11 @@ export default function Popup({ id, title, body, status, volunteerID, date, onCl
             placeholder="Description"
             editable={isEditable}
           />
-          <TextInput
-            style={styles.input}
-            value={isEditable ? newDate : date}
-            onChangeText={isEditable ? setNewDate : undefined}
-            placeholder="Date"
-            editable={isEditable}
+          <DateTimePickerField
+            value={new Date(date)}
+            onChange={(jDate: Date) => {
+              setNewDate(jDate.getMonth() + "/" + jDate.getDate() + "/" + jDate.getFullYear());
+            }}
           />
 
           <Text style={styles.pendingMsg}>{status}</Text>

@@ -5,6 +5,7 @@ import Card from "./Card";
 import { Task, TaskInput } from "./types";
 import { auth } from '../firebaseConfig'; 
 import { onAuthStateChanged } from 'firebase/auth';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function Board() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -33,7 +34,7 @@ export default function Board() {
     }
   };
 
-  useEffect(() => {
+  useFocusEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setUserEmail(user.email ?? null);
@@ -44,7 +45,7 @@ export default function Board() {
       }
     });
     return unsubscribe;
-  }, []);
+  });
 
   const handleAddTask = async (newTask: TaskInput) => {
     // optimistic update
@@ -104,7 +105,10 @@ export default function Board() {
 
   return (
     <View style={styles.container}>
-      <AddTask onAdd={handleAddTask} />
+      <AddTask
+        onAdd={handleAddTask} 
+        task={null}
+      />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {renderTaskList(pendingTasks, "Pending Tasks")}
         {renderTaskList(acceptedTasks, "Accepted Tasks")}
