@@ -1,9 +1,0 @@
-{
-  "dependencies": {
-    "expo": "^54.0.13"
-  },
-  "devDependencies": {
-    "@types/react": "^19.2.2",
-    "@types/react-native": "^0.72.8"
-  }
-}

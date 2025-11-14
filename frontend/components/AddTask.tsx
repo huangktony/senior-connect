@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import { StyleSheet, Alert, View, TextInput, Button } from "react-native";
 import { auth } from '../firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
-
-// 👇 Define a type for the task (same structure as in Board)
+import DateTimePicker from './DateTimePicker';
 interface TaskInput {
   id: string;
   title: string;
@@ -13,15 +12,15 @@ interface TaskInput {
   volunteerID: string;
 }
 
-// 👇 Define what props AddTask expects
 interface AddTaskProps {
   onAdd: (task: TaskInput) => void;
+  task: TaskInput | null;
 }
 
-export default function AddTask({ onAdd }: AddTaskProps) {
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
-  const [date, setDate] = useState("");
+export default function AddTask({ onAdd, task }: AddTaskProps) {
+  const [title, setTitle] = useState(task?.title ?? "");
+  const [body, setBody] = useState(task?.body ?? "");
+  const [date, setDate] = useState(task?.date ?? "");
   const [userEmail, setUserEmail] = useState<String | null>("");
 
   useEffect(() => {
@@ -68,21 +67,21 @@ export default function AddTask({ onAdd }: AddTaskProps) {
     <View style={styles.container}>
       <TextInput
         style={styles.input}
+        placeholderTextColor='black'
         placeholder="Task Title"
         value={title}
         onChangeText={setTitle}
       />
       <TextInput
         style={styles.input}
+        placeholderTextColor='black'
         placeholder="Task Description"
         value={body}
         onChangeText={setBody}
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Task Date"
-        value={date}
-        onChangeText={setDate}
+      <DateTimePicker
+        value={new Date()}
+        onChange={(jDate: Date) => setDate(jDate.toString())}
       />
       <Button title="Add Task" onPress={handleSubmit} />
     </View>
@@ -103,7 +102,7 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: "#ccc",
-    color: "#000",
+    color: 'black',
     borderRadius: 8,
     padding: 8,
     marginBottom: 10,
