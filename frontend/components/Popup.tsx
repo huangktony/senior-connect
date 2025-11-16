@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, TextInput, Button, StyleSheet, Modal, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Task } from "./types";
 import DateTimePickerField from "./DateTimePicker";
+import { Picker } from '@react-native-picker/picker';
 
 interface PopupProps extends Task {
   onClose: () => void;
@@ -9,10 +10,11 @@ interface PopupProps extends Task {
   onDelete?: (taskId: string) => void;
 }
 
-export default function Popup({ id, title, body, status, volunteerID, date, onClose, onSave, onDelete }: PopupProps) {
+export default function Popup({ id, title, body, status, volunteerID, date, category, onClose, onSave, onDelete }: PopupProps) {
   const [newTitle, setNewTitle] = useState(title);
   const [newBody, setNewBody] = useState(body);
   const [newDate, setNewDate] = useState(date);
+  const [newCategory, setNewCategory] = useState(category);
   const [volunteerInfo, setVolunteerInfo] = useState<any>(null);
   const [loadingVolunteer, setLoadingVolunteer] = useState(false);
 
@@ -56,13 +58,14 @@ export default function Popup({ id, title, body, status, volunteerID, date, onCl
 
   const handleSave = async () => {
     try {
+      console.log(newCategory);
       const response = await fetch(`https://strivingly-proadoption-bronwyn.ngrok-free.dev/tasks/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "69420" },
-        body: JSON.stringify({ title: newTitle, body: newBody, status: status, date: newDate }),
+        body: JSON.stringify({ title: newTitle, body: newBody, status: status, date: newDate, category: newCategory}),
       });
       if (!response.ok) throw new Error("Failed to update task");
-      onSave({ id, title: newTitle, body: newBody, status: status, date: newDate, volunteerID });
+      onSave({ id, title: newTitle, body: newBody, status: status, date: newDate, volunteerID, category: newCategory});
       onClose();
     } catch (error) {
       console.error("Error updating task:", error);
@@ -95,10 +98,24 @@ export default function Popup({ id, title, body, status, volunteerID, date, onCl
             placeholder="Description"
             editable={isEditable}
           />
+          {status === "pending" ? (
+          <Picker
+              selectedValue={newCategory}
+              onValueChange={(itemValue) => setNewCategory(itemValue)}
+              style={styles.picker}
+            >
+                  <Picker.Item label="Errands" value="Errands" />
+                  <Picker.Item label="Electronics" value="Electronics" />
+                  <Picker.Item label="Chores" value="Chores" />
+                  <Picker.Item label="Events" value="Events" />
+          </Picker>
+          ) : (
+            <Text style={styles.input}>Category: {category}</Text>
+          )}
           <DateTimePickerField
             value={new Date(date)}
             onChange={(jDate: Date) => {
-              setNewDate(jDate.getMonth() + "/" + jDate.getDate() + "/" + jDate.getFullYear());
+              setNewDate(jDate.toString());
             }}
           />
 
@@ -210,4 +227,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
+  picker: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    color: 'black',
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 10,
+  }
 });
