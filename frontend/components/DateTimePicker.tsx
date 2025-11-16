@@ -23,8 +23,6 @@ export default function DateTimePickerField({
   const [date, setDate] = useState<Date>(value ?? new Date());
   const [showPicker, setShowPicker] = useState(false);
   const [pickerMode, setPickerMode] = useState<"date" | "time">("date");
-  onChange(date);
-
   // Display text for the button
   const formatted = (d: Date) =>
     d.toLocaleDateString() + " • " + d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, Image, Button, ActivityIndicator, TextInput, Alert } from "react-native";
 import { auth } from "../firebaseConfig";
 import { onAuthStateChanged, signOut } from "firebase/auth";
@@ -13,7 +13,7 @@ export default function ElderProfile() {
   const [userInfo, setUserInfo] = useState({ firstName: "", lastName: "", latitude: 0, longitude: 0 });
   const [loading, setLoading] = useState(true);
 
-  useFocusEffect(() => {
+  useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setUserEmail(user.email);
@@ -26,7 +26,7 @@ export default function ElderProfile() {
       setLoading(false);
     });
     return unsubscribe;
-  });
+  }, []);
 
   const fetchUserInfo = async (email: string) => {
     try {

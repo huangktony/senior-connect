@@ -37,13 +37,13 @@ def chat_create_task_gemini():
     # 1. Use Google genai SDK to extract task fields
     import re, json as pyjson
     client = Client(api_key=GEMINI_API_KEY)
-
+    CATEGORIES = ["Errands", "Electronics", "Chores", "Events"]
     gemini_prompt = (
         "You are an assistant that extracts task details from user instructions. "
         "Given the following text, extract the following fields as JSON: "
-        "title, status, body, date (in JavaScript date string format), category, elderID, latitude, longitude, volunteerID. "
+        f"title, status, body, date (in JavaScript date string format), category (must be one of these: ${CATEGORIES}), elderID, latitude, longitude, volunteerID. "
         "If a field is not mentioned, use an empty string or null. "
-        f"If the user refernces today or tomorrow, the date is \"{datetime.datetime.now()}\". Remember to put the right time based on the user's request"
+        f"If the user refernces today or tomorrow, the date is \"{datetime.datetime.now()}\". REMEMBER TO PUT THE RIGHT TIME BASED ON THE USER'S REQUEST."
         f"User said: \"{transcript}\""
     )
     try:
@@ -121,7 +121,6 @@ def add_task():
         'status': 'pending',
         'body': data['body'],
         'date': data['date'],
-        'time': data['time'],
         'category': data['category'],
         'elderID': data['elderID'],
         'latitude': data['latitude'],
