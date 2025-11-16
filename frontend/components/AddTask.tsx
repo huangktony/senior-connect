@@ -3,6 +3,7 @@ import { StyleSheet, Alert, View, TextInput, Button } from "react-native";
 import { auth } from '../firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
 import DateTimePicker from './DateTimePicker';
+import { Picker } from '@react-native-picker/picker';
 interface TaskInput {
   id: string;
   title: string;
@@ -10,6 +11,7 @@ interface TaskInput {
   date: string;
   status: string;
   volunteerID: string;
+  category: string;
 }
 
 interface AddTaskProps {
@@ -20,7 +22,8 @@ interface AddTaskProps {
 export default function AddTask({ onAdd, task }: AddTaskProps) {
   const [title, setTitle] = useState(task?.title ?? "");
   const [body, setBody] = useState(task?.body ?? "");
-  const [date, setDate] = useState(task?.date ?? "");
+  const [date, setDate] = useState(task?.date ?? (new Date()).toString());
+  const [category, setCategory] = useState("(Select category)");
   const [userEmail, setUserEmail] = useState<String | null>("");
 
   useEffect(() => {
@@ -50,7 +53,7 @@ export default function AddTask({ onAdd, task }: AddTaskProps) {
         "elderID": userEmail,
         "status": "pending",
         "title": title,
-        "category": "something",
+        "category": category,
         "latitude": 0,
         "longitude": 0
       })});
@@ -58,7 +61,7 @@ export default function AddTask({ onAdd, task }: AddTaskProps) {
       setBody("");
       setDate("");
       const data = await response.json();
-      onAdd({ id: data.id, title, body, date, status: "Pending" , volunteerID: data.volunteerID});
+      onAdd({ id: data.id, title, body, date, status: "Pending" , volunteerID: data.volunteerID, category});
     } catch(error : any) {
             Alert.alert('Something happend: ' + error.message);
       }
@@ -79,6 +82,16 @@ export default function AddTask({ onAdd, task }: AddTaskProps) {
         value={body}
         onChangeText={setBody}
       />
+      <Picker
+            selectedValue={category}
+            onValueChange={(itemValue) => setCategory(itemValue)}
+            style={styles.picker}
+          >
+            <Picker.Item label="Errands" value="Errands" />
+            <Picker.Item label="Electronics" value="Electronics" />
+            <Picker.Item label="Chores" value="Chores" />
+            <Picker.Item label="Events" value="Events" />
+      </Picker>
       <DateTimePicker
         value={new Date()}
         onChange={(jDate: Date) => setDate(jDate.toString())}
@@ -107,4 +120,12 @@ const styles = StyleSheet.create({
     padding: 8,
     marginBottom: 10,
   },
+  picker: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    color: 'black',
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 10,
+  }
 });
