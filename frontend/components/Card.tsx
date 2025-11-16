@@ -9,7 +9,7 @@ interface CardProps extends Omit<Task, "body"> {
   onDelete: (taskId: string) => void;
 }
 
-export default function Card({ id, title, body, status, date, onEdit, onDelete, volunteerID }: CardProps) {
+export default function Card({ id, title, body, status, date, category, onEdit, onDelete, volunteerID }: CardProps) {
   const [visible, setVisible] = useState(false);
   
   return (
@@ -28,6 +28,7 @@ export default function Card({ id, title, body, status, date, onEdit, onDelete, 
           status={status}
           date={date}
           volunteerID={volunteerID}
+          category={category}
           onClose={() => setVisible(false)}
           onDelete={onDelete}
           onSave={(updatedTask) => {

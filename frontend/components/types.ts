@@ -6,6 +6,7 @@ export interface Task {
   body: string;
   status: string;
   date: string;
+  category: string;
   volunteerID: string;
 }
 

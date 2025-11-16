@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { View, FlatList, StyleSheet, Button, Alert, Text, ScrollView } from "react-native";
 import AddTask from "./AddTask";
 import Card from "./Card";
 import { Task, TaskInput } from "./types";
 import { auth } from '../firebaseConfig'; 
 import { onAuthStateChanged } from 'firebase/auth';
-import { useFocusEffect } from '@react-navigation/native';
 
 export default function Board() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -34,7 +33,7 @@ export default function Board() {
     }
   };
 
-  useFocusEffect(() => {
+  useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setUserEmail(user.email ?? null);
@@ -43,9 +42,10 @@ export default function Board() {
         setUserEmail(null);
         setTasks([]);
       }
+     });
+
+      return unsubscribe;
     });
-    return unsubscribe;
-  });
 
   const handleAddTask = async (newTask: TaskInput) => {
     // optimistic update
@@ -94,6 +94,7 @@ export default function Board() {
             status={item.status}
             date={item.date}
             volunteerID={item.volunteerID}
+            category={item.category}
             onEdit={handleEditTask}
             onDelete={handleDeleteTask}
           />
