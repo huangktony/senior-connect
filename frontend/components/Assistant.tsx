@@ -67,10 +67,7 @@ export default function Assistant() {
   useSpeechRecognitionEvent("result", (event) => {
     const text = event.results[0].transcript;
     setTranscript(transcript + text);
-    }
-  );
-
-
+  });
 
   useSpeechRecognitionEvent("error", (event) => {
     console.log("Speech error:", event.error, event.message);
@@ -127,7 +124,9 @@ export default function Assistant() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Ask our AI Assistant for Help</Text>
-      <Text style={styles.description}>Tell our assistant what task you want to add</Text>
+      <Text style={styles.description}>
+        Tell our assistant what task you want to add
+      </Text>
       <TouchableOpacity
         style={[
           styles.micButton,
@@ -143,7 +142,9 @@ export default function Assistant() {
       </TouchableOpacity>
 
       <ScrollView style={styles.scrollView}>
-        <Text style={styles.transcript}>{transcript || "Say something..."}</Text>
+        <Text style={styles.transcript}>
+          {transcript || "Say something..."}
+        </Text>
       </ScrollView>
     </View>
   );
@@ -174,12 +175,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     color: "#3250e6ff",
-    fontWeight: 600
+    fontWeight: 600,
   },
   description: {
     marginTop: 5,
     fontSize: 16,
-    color: "##333",
-    fontWeight: 300
-  }
+    color: "#333",
+    fontWeight: 300,
+  },
 });

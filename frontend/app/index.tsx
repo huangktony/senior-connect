@@ -29,6 +29,7 @@ export default function EmailEntry() {
           "Account already exists",
           `This email is linked with ${methods.join(", ")}. Please sign in using that method.`
         );
+        setLoading(false);
       } 
       // Case 3: no account found — double-check existence
       // Case 3: no account found
@@ -37,7 +38,6 @@ export default function EmailEntry() {
       }
     } catch (err: any) {
       Alert.alert("Error", err.message);
-    } finally {
       setLoading(false);
     }
   };
