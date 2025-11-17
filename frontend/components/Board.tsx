@@ -9,43 +9,69 @@ import { onAuthStateChanged } from 'firebase/auth';
 export default function Board() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const refreshTasks = useCallback(async (email?: string | null) => {
+  const e = email ?? userEmail;
+  if (!e) return;
 
-  const refreshTasks = async (email?: string | null) => {
-    const e = email ?? userEmail;
-    if (!e) return;
-    try {
-      const response = await fetch(
-        `https://strivingly-proadoption-bronwyn.ngrok-free.dev/tasks/${encodeURIComponent(e)}`,
-        {
-          method: "GET",
-          headers: new Headers({ "ngrok-skip-browser-warning": "69420" }),
+  try {
+    const response = await fetch(
+      `https://strivingly-proadoption-bronwyn.ngrok-free.dev/tasks/${encodeURIComponent(e)}`,
+      {
+        method: "GET",
+        headers: new Headers({ "ngrok-skip-browser-warning": "69420" }),
+      }
+    );
+
+    const data = await response.json();
+    const normalized = data.map((t: any) => ({
+      ...t,
+      status: (t.status || "").toString(),
+    }));
+
+    setTasks(normalized);
+  } catch (error: any) {
+    Alert.alert("Something happened: " + (error.message || error));
+  }
+}, [userEmail]);
+
+
+useEffect(() => {
+  let authUnsub: any;
+  let metaUnsub: any;
+
+  authUnsub = onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      const email = user.email ?? null;
+      setUserEmail(email);
+
+      // initial load
+      await refreshTasks(email);
+
+      // real-time subscription to Firestore metadata
+      const { getFirestore, doc, onSnapshot } = require("firebase/firestore");
+      const db = getFirestore();
+
+      metaUnsub = onSnapshot(
+        doc(db, "tasksMeta", email),
+        (snapshot: any) => {
+          if (snapshot.exists()) {
+            // metadata changed → tasks updated → refresh
+            refreshTasks(email);
+          }
         }
       );
-      const data = await response.json();
-      // Normalize status values for consistent grouping
-      const normalized = data.map((t: any) => ({
-        ...t,
-        status: (t.status || "").toString(),
-      }));
-      setTasks(normalized);
-    } catch (error: any) {
-      Alert.alert("Something happened: " + (error.message || error));
+    } else {
+      setUserEmail(null);
+      setTasks([]);
+      if (metaUnsub) metaUnsub();
     }
+  });
+
+  return () => {
+    if (authUnsub) authUnsub();
+    if (metaUnsub) metaUnsub();
   };
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setUserEmail(user.email ?? null);
-        await refreshTasks(user.email ?? null);
-      } else {
-        setUserEmail(null);
-        setTasks([]);
-      }
-     });
-
-      return unsubscribe;
-    });
+}, [refreshTasks]);
 
   const handleAddTask = async (newTask: TaskInput) => {
     // optimistic update

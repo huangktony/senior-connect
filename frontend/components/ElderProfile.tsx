@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, Image, Button, ActivityIndicator, TextInput, Al
 import { auth } from "../firebaseConfig";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { useRouter } from "expo-router";
-import { useFocusEffect } from '@react-navigation/native';
 
 export default function ElderProfile() {
   const router = useRouter();
