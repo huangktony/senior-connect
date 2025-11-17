@@ -4,7 +4,11 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 import firebase_admin
 from firebase_admin import credentials, auth, firestore
 from get_best_tasks import find_best_tasks
-from google.genai import Client
+# edit to allow running despite bad import. 
+try:
+    from google.genai import Client
+except Exception:
+    Client = None
 import os
 import datetime
 
@@ -36,6 +40,8 @@ def chat_create_task_gemini():
 
     # 1. Use Google genai SDK to extract task fields
     import re, json as pyjson
+    if Client is None:
+        return jsonify({'error': 'GenAI SDK not installed. Install the `google-genai` package and set the GEMINI_API_KEY environment variable to enable /chat.'}), 501
     client = Client(api_key=GEMINI_API_KEY)
     CATEGORIES = ["Errands", "Electronics", "Chores", "Events"]
     gemini_prompt = (
