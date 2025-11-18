@@ -40,7 +40,7 @@ export default function AddTask({ onAdd, task }: AddTaskProps) {
     if (!title.trim()) return;
     try {
     
-    const response = await fetch("https://strivingly-proadoption-bronwyn.ngrok-free.dev/tasks", {
+    const response = await fetch("http://127.0.0.1:5000/tasks", {
       method: 'POST',
       headers: {
           'Content-Type': 'application/json',

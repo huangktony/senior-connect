@@ -1,7 +1,3 @@
-import {
-  ExpoSpeechRecognitionModule,
-  useSpeechRecognitionEvent,
-} from "expo-speech-recognition";
 import { useState, useEffect } from "react";
 import React from "react";
 import {
@@ -11,10 +7,25 @@ import {
   Alert,
   TouchableOpacity,
   StyleSheet,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { auth } from "../firebaseConfig";
 import { onAuthStateChanged } from "firebase/auth";
+
+// Conditionally import speech recognition
+let ExpoSpeechRecognitionModule: any = null;
+let useSpeechRecognitionEvent: any = () => {};
+
+if (Platform.OS !== 'web') {
+  try {
+    const speechModule = require("expo-speech-recognition");
+    ExpoSpeechRecognitionModule = speechModule.ExpoSpeechRecognitionModule;
+    useSpeechRecognitionEvent = speechModule.useSpeechRecognitionEvent;
+  } catch (e) {
+    console.log('Speech recognition not available');
+  }
+}
 
 export default function Assistant() {
   const [recognizing, setRecognizing] = useState(false);
@@ -35,9 +46,7 @@ export default function Assistant() {
   const fetchUserInfo = async (email: string) => {
     try {
       const response = await fetch(
-        `https://strivingly-proadoption-bronwyn.ngrok-free.dev/users/${encodeURIComponent(
-          email
-        )}`,
+        `http://127.0.0.1:5000/users/${encodeURIComponent(email)}`,
         {
           method: "GET",
           headers: { "ngrok-skip-browser-warning": "69420" },
@@ -53,27 +62,35 @@ export default function Assistant() {
     }
   };
 
-  useSpeechRecognitionEvent("start", () => setRecognizing(true));
-  useSpeechRecognitionEvent("end", () => {
-    if (recognizing) {
-      ExpoSpeechRecognitionModule.start({
-        lang: "en-US",
-        interimResults: false,
-        continuous: true,
-      });
-    }
-  });
+  // Only use speech events if module is available
+  if (ExpoSpeechRecognitionModule) {
+    useSpeechRecognitionEvent("start", () => setRecognizing(true));
+    useSpeechRecognitionEvent("end", () => {
+      if (recognizing) {
+        ExpoSpeechRecognitionModule.start({
+          lang: "en-US",
+          interimResults: false,
+          continuous: true,
+        });
+      }
+    });
 
-  useSpeechRecognitionEvent("result", (event) => {
-    const text = event.results[0].transcript;
-    setTranscript(transcript + text);
-  });
+    useSpeechRecognitionEvent("result", (event: any) => {
+      const text = event.results[0].transcript;
+      setTranscript(transcript + text);
+    });
 
-  useSpeechRecognitionEvent("error", (event) => {
-    console.log("Speech error:", event.error, event.message);
-  });
+    useSpeechRecognitionEvent("error", (event: any) => {
+      console.log("Speech error:", event.error, event.message);
+    });
+  }
 
   const handleStart = async () => {
+    if (!ExpoSpeechRecognitionModule) {
+      Alert.alert("Speech recognition not available in Expo Go. Use a development build.");
+      return;
+    }
+
     const result = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
     if (!result.granted) {
       Alert.alert("Microphone access is required.");
@@ -92,13 +109,15 @@ export default function Assistant() {
 
   const handleStop = async () => {
     setRecognizing(false);
-    await ExpoSpeechRecognitionModule.stop();
+    if (ExpoSpeechRecognitionModule) {
+      await ExpoSpeechRecognitionModule.stop();
+    }
 
     if (!transcript.trim()) return;
     console.log(transcript);
     try {
       const response = await fetch(
-        "https://strivingly-proadoption-bronwyn.ngrok-free.dev/chat",
+        "http://127.0.0.1:5000/chat",
         {
           method: "POST",
           headers: {
@@ -175,12 +194,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     color: "#3250e6ff",
-    fontWeight: 600,
+    fontWeight: "600",
   },
   description: {
     marginTop: 5,
     fontSize: 16,
     color: "#333",
-    fontWeight: 300,
+    fontWeight: "300",
   },
 });

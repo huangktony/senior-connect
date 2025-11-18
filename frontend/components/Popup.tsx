@@ -23,7 +23,7 @@ export default function Popup({ id, title, body, status, volunteerID, date, cate
       if ((status.toLowerCase() === "accepted" || status.toLowerCase() === "completed") && volunteerID) {
         setLoadingVolunteer(true);
         try {
-          const res = await fetch(`https://strivingly-proadoption-bronwyn.ngrok-free.dev/users/${encodeURIComponent(volunteerID)}`, {
+          const res = await fetch(`http://127.0.0.1:5000/users/${encodeURIComponent(volunteerID)}`, {
             method: "GET",
             headers: { "ngrok-skip-browser-warning": "69420" }
           });
@@ -41,7 +41,7 @@ export default function Popup({ id, title, body, status, volunteerID, date, cate
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(`https://strivingly-proadoption-bronwyn.ngrok-free.dev/tasks/${id}`, {
+      const response = await fetch(`http://127.0.0.1:5000/tasks/${id}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -59,7 +59,7 @@ export default function Popup({ id, title, body, status, volunteerID, date, cate
   const handleSave = async () => {
     try {
       console.log(newCategory);
-      const response = await fetch(`https://strivingly-proadoption-bronwyn.ngrok-free.dev/tasks/${id}`, {
+      const response = await fetch(`http://127.0.0.1:5000/tasks/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "69420" },
         body: JSON.stringify({ title: newTitle, body: newBody, status: status, date: newDate, category: newCategory}),
