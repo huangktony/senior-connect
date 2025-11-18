@@ -58,7 +58,7 @@ export default function EmailEntry() {
           value={email}
           onChangeText={setEmail}
           placeholder="john.bluder@utexas.edu"
-          placeholderTextColor="#999"
+          placeholderTextColor="#666"
           keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
@@ -84,34 +84,32 @@ export default function EmailEntry() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "#FFFFFF",
   },
   logoContainer: {
-    backgroundColor: "#2C003E",
-    paddingVertical: 40,
+    backgroundColor: "#7B3B7A",
+    paddingTop: 40,
     paddingHorizontal: 20,
     alignItems: "center",
     justifyContent: "center",
-    height: 120,
   },
   logoImage: {
-    width: 200,
-    height: 80,
-    marginTop: 40,
+    width: 210,
+    height: 90,
   },
   shapesContainer: {
     height: 280,
     position: "relative",
     overflow: "hidden",
-    marginTop: 50,
+    marginTop: 70,
   },
   shape: {
     position: "absolute",
     height: 120,
   },
   orangeShape: {
-    width: "95%",
-    backgroundColor: "#FF6B35",
+    width: "75%",
+    backgroundColor: "#F5B041",
     left: 0,
     top: 0,
     zIndex: 1,
@@ -119,8 +117,8 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 15,
   },
   purpleShape: {
-    width: "90%",
-    backgroundColor: "#A855F7",
+    width: "75%",
+    backgroundColor: "#7B3B7A",
     right: 0,
     top: 60,
     zIndex: 2,
@@ -128,9 +126,9 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 15,
   },
   darkPurpleShape: {
-    width: "85%",
-    backgroundColor: "#4A1570",
-    left: "5%",
+    width: "75%",
+    backgroundColor: "#4A1942",
+    left: "12.5%",
     top: 120,
     zIndex: 3,
     borderRadius: 15,
@@ -142,28 +140,28 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: "700",
-    color: "#2C003E",
+    color: "#4A1942",
     marginBottom: 30,
     marginTop: 20,
   },
   input: {
-    borderBottomWidth: 2,
-    borderBottomColor: "#2C003E",
+    borderBottomWidth: 3,
+    borderBottomColor: "#4A1942",
     fontSize: 20,
-    paddingVertical: 12,
-    color: "#2C003E",
-    marginBottom: 40,
+    color: "#4A1942",
+    marginBottom: 35,
   },
   nextButton: {
-    backgroundColor: "#2C003E",
-    paddingVertical: 16,
-    borderRadius: 30,
+    backgroundColor: "#7B3B7A",
+    paddingVertical: 14,
+    paddingHorizontal: 50,
+    borderRadius: 25,
     alignItems: "center",
-    width: "100%",
+    alignSelf: "flex-end",
   },
   nextButtonText: {
     color: "#fff",
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: "500",
   },
 });

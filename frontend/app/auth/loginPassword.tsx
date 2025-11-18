@@ -10,12 +10,10 @@ import {
   ActivityIndicator,
   Image,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { useLocalSearchParams } from "expo-router";
 import { auth } from "../../firebaseConfig";
-import { MotiView } from "moti";
 
 export default function LoginPassword() {
   const params = useLocalSearchParams();
@@ -57,17 +55,6 @@ export default function LoginPassword() {
     <View style={styles.container}>
       {/* Logo Header */}
       <View style={styles.logoContainer}>
-        <MotiView
-          from={{ translateX: -40, opacity: 0 }}
-          animate={{ translateX: 0, opacity: 1 }}
-          transition={{ type: "timing", duration: 500 }}
-          style={styles.backButton}
-        >
-          <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={28} color="#fff" />
-          </TouchableOpacity>
-        </MotiView>
-
         <Image 
           source={require('../../assets/images/Group_5.png')} 
           style={styles.logoImage}
@@ -75,7 +62,7 @@ export default function LoginPassword() {
         />
       </View>
 
-      {/* Decorative Shapes - Stacked correctly */}
+      {/* Decorative Shapes */}
       <View style={styles.shapesContainer}>
         <View style={[styles.shape, styles.orangeShape]} />
         <View style={[styles.shape, styles.purpleShape]} />
@@ -90,24 +77,33 @@ export default function LoginPassword() {
         <TextInput
           style={styles.input}
           placeholder="Enter your password"
-          placeholderTextColor="#999"
+          placeholderTextColor="#666"
           secureTextEntry
           value={password}
           onChangeText={setPassword}
           editable={!loading}
         />
 
-        <TouchableOpacity 
-          style={styles.nextButton} 
-          onPress={handleLogin}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.nextButtonText}>Sign In</Text>
-          )}
-        </TouchableOpacity>
+        <View style={styles.buttonRow}>
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={() => router.back()}
+          >
+            <Text style={styles.backButtonText}>Back</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.nextButton} 
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.nextButtonText}>Next</Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -116,40 +112,32 @@ export default function LoginPassword() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "#FFFFFF",
   },
   logoContainer: {
-    backgroundColor: "#2C003E",
-    paddingVertical: 40,
+    backgroundColor: "#7B3B7A",
+    paddingTop: 40,
     paddingHorizontal: 20,
     alignItems: "center",
     justifyContent: "center",
-    height: 120,
-  },
-  backButton: {
-    position: "absolute",
-    top: Platform.OS === "ios" ? 60 : 40,
-    left: 20,
-    zIndex: 10,
   },
   logoImage: {
-    width: 200,
-    height: 80,
-    marginTop: 40,
+    width: 210,
+    height: 90,
   },
   shapesContainer: {
     height: 280,
     position: "relative",
     overflow: "hidden",
-    marginTop: 50,
+    marginTop: 70,
   },
   shape: {
     position: "absolute",
     height: 120,
   },
   orangeShape: {
-    width: "95%",
-    backgroundColor: "#FF6B35",
+    width: "75%",
+    backgroundColor: "#F5B041",
     left: 0,
     top: 0,
     zIndex: 1,
@@ -157,8 +145,8 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 15,
   },
   purpleShape: {
-    width: "90%",
-    backgroundColor: "#A855F7",
+    width: "75%",
+    backgroundColor: "#7B3B7A",
     right: 0,
     top: 60,
     zIndex: 2,
@@ -166,9 +154,9 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 15,
   },
   darkPurpleShape: {
-    width: "85%",
-    backgroundColor: "#4A1570",
-    left: "5%",
+    width: "75%",
+    backgroundColor: "#4A1942",
+    left: "12.5%",
     top: 120,
     zIndex: 3,
     borderRadius: 15,
@@ -178,9 +166,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    fontSize: 32,
+    fontSize: 33,
     fontWeight: "700",
-    color: "#2C003E",
+    color: "#4A1942",
     marginBottom: 8,
     marginTop: 20,
   },
@@ -190,23 +178,39 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   input: {
-    borderBottomWidth: 2,
-    borderBottomColor: "#2C003E",
+    borderBottomWidth: 3,
+    borderBottomColor: "#4A1942",
     fontSize: 20,
-    paddingVertical: 12,
-    color: "#2C003E",
-    marginBottom: 40,
+    paddingVertical: 5,
+    color: "#4A1942",
+    marginBottom: 35,
+  },
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  backButton: {
+    backgroundColor: "#7B3B7A",
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+    borderRadius: 25,
+    alignItems: "center",
+  },
+  backButtonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "500",
   },
   nextButton: {
-    backgroundColor: "#2C003E",
-    paddingVertical: 16,
-    borderRadius: 30,
+    backgroundColor: "#F5B041",
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+    borderRadius: 25,
     alignItems: "center",
-    width: "100%",
   },
   nextButtonText: {
     color: "#fff",
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: "500",
   },
 });
