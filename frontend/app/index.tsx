@@ -22,7 +22,7 @@ export default function EmailEntry() {
       } else if (methods.length > 0) {
         Alert.alert("This email is linked with another provider.", methods.join(", "));
       } else {
-        router.push({ pathname: "/auth/signupPassword", params: { email: normalizedEmail } });
+        router.push({ pathname: "/auth/chooseRole", params: { email: normalizedEmail } });
       }
     } catch (error: any) {
       Alert.alert("Error", error.message);
