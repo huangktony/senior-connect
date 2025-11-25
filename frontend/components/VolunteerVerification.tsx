@@ -1,4 +1,3 @@
-// App.js
 import React, { useState, useRef } from "react";
 import {
   SafeAreaView,
