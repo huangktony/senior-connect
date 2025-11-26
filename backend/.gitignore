@@ -1,7 +1,1 @@
 node_modules/
-__pycache__/
-venv/
-.venv/
-serviceAccountKey.json
-pyvenv.cfg
-.env

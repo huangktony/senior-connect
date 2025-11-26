@@ -9,11 +9,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true,
-      "infoPlist": {
-        "NSMicrophoneUsageDescription": "This app needs access to your microphone to record your voice.",
-        "NSSpeechRecognitionUsageDescription": "This app needs access to speech recognition to convert your voice to text."
-      }
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
@@ -23,10 +19,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false,
-      "permissions": [
-        "RECORD_AUDIO"
-      ]
+      "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "static",
@@ -34,7 +27,6 @@
     },
     "plugins": [
       "expo-router",
-      "expo-av",
       [
         "expo-splash-screen",
         {

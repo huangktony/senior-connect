@@ -1,158 +1,21 @@
-import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Image } from "react-native";
-import { fetchSignInMethodsForEmail } from "firebase/auth";
-import { useRouter } from "expo-router";
-import { auth } from "../firebaseConfig";
+MIT License
 
-export default function EmailEntry() {
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
+Copyright (c) 2025 huangktony
 
-  const handleContinue = async () => {
-    if (!email.trim()) return Alert.alert("Please enter your email.");
-    setLoading(true);
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-    try {
-      const normalizedEmail = email.trim().toLowerCase();
-      const methods = await fetchSignInMethodsForEmail(auth, normalizedEmail);
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-      if (methods.includes("password")) {
-        router.push({ pathname: "/auth/loginPassword", params: { email: normalizedEmail } });
-      } else if (methods.length > 0) {
-        Alert.alert("This email is linked with another provider.", methods.join(", "));
-      } else {
-        router.push({ pathname: "/auth/signupPassword", params: { email: normalizedEmail } });
-      }
-    } catch (error: any) {
-      Alert.alert("Error", error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <View style={styles.container}>
-      {/* Logo Header */}
-      <View style={styles.logoContainer}>
-        <Image 
-          source={require('/assets/images/Group_5.png')} 
-          style={styles.logoImage}
-          resizeMode="contain"
-        />
-      </View>
-
-      {/* Decorative Shapes - Stacked correctly */}
-      <View style={styles.shapesContainer}>
-        <View style={[styles.shape, styles.orangeShape]} />
-        <View style={[styles.shape, styles.purpleShape]} />
-        <View style={[styles.shape, styles.darkPurpleShape]} />
-      </View>
-
-      {/* Content */}
-      <View style={styles.contentContainer}>
-        <Text style={styles.title}>Can we get your email?</Text>
-        
-        <TextInput
-          style={styles.input}
-          value={email}
-          onChangeText={setEmail}
-          placeholder="john.bluder@utexas.edu"
-          placeholderTextColor="#999"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-          editable={!loading}
-        />
-
-        <TouchableOpacity 
-          style={styles.nextButton} 
-          onPress={handleContinue}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#2C003E" size="large" />
-          ) : (
-            <Text style={styles.nextText}>next</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F5F5F5",
-  },
-  logoContainer: {
-    backgroundColor: "#2C003E",
-    paddingVertical: 40,
-    paddingHorizontal: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    height: 180,
-  },
-  logoImage: {
-    width: 200,
-    height: 80,
-  },
-  shapesContainer: {
-    height: 280,
-    position: "relative",
-    overflow: "hidden",
-  },
-  shape: {
-    position: "absolute",
-    height: 120,
-  },
-  orangeShape: {
-    width: "95%",
-    backgroundColor: "#FF6B35",
-    left: 0,
-    top: 0,
-    zIndex: 3,
-  },
-  purpleShape: {
-    width: "90%",
-    backgroundColor: "#A855F7",
-    right: 0,
-    top: 60,
-    zIndex: 2,
-  },
-  darkPurpleShape: {
-    width: "85%",
-    backgroundColor: "#4A1570",
-    left: "5%",
-    top: 120,
-    zIndex: 1,
-  },
-  contentContainer: {
-    paddingHorizontal: 36,
-    flex: 1,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "700",
-    color: "#2C003E",
-    marginBottom: 30,
-    marginTop: 20,
-  },
-  input: {
-    borderBottomWidth: 2,
-    borderBottomColor: "#2C003E",
-    fontSize: 20,
-    paddingVertical: 12,
-    color: "#2C003E",
-    marginBottom: 60,
-  },
-  nextButton: {
-    alignSelf: "flex-end",
-  },
-  nextText: {
-    fontSize: 42,
-    fontWeight: "600",
-    color: "#2C003E",
-  },
-});
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
