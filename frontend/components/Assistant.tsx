@@ -48,8 +48,7 @@ export default function Assistant() {
       const response = await fetch(
         `http://127.0.0.1:5000/users/${encodeURIComponent(email)}`,
         {
-          method: "GET",
-          headers: { "ngrok-skip-browser-warning": "69420" },
+          method: "GET"
         }
       );
       const data = await response.json();
@@ -122,8 +121,7 @@ export default function Assistant() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Accept: "application/json",
-            "ngrok-skip-browser-warning": "69420",
+            Accept: "application/json"
           },
           body: JSON.stringify({
             transcript,

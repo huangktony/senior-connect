@@ -1,22 +1,36 @@
-import React, { useCallback, useState, useEffect } from "react";
-import { View, FlatList, StyleSheet, Alert, Text, ScrollView, TouchableOpacity, Image } from "react-native";
-import AddTask from "./AddTask";
-import Popup from "./Popup";  // Add this import
+import React, { useEffect, useState, useCallback } from "react";
+import { 
+  View, 
+  FlatList, 
+  StyleSheet, 
+  Alert, 
+  Text, 
+  ScrollView, 
+  TouchableOpacity, 
+  Image 
+} from "react-native";
+import AddTask from "./AddTask"; 
+import Card from "./Card"; 
+import Popup from "./Popup"; 
 import { Task, TaskInput } from "./types";
 import { auth } from '../firebaseConfig'; 
 import { onAuthStateChanged } from 'firebase/auth';
 
+// Helper component for separation
+const HorizontalRule = () => <View style={styles.hr} />;
+
 export default function Board() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [showAddTask, setShowAddTask] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [showAddTask, setShowAddTask] = useState(false); // State for Add Task modal
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null); // State for Task Detail Popup
 
+  // Using useCallback for refreshTasks for dependency consistency
   const refreshTasks = useCallback(async (email?: string | null) => {
     const e = email ?? userEmail;
     if (!e) return;
-
     try {
+      // NOTE: Using the API URL from the second component, but you should verify this is correct.
       const response = await fetch(
         `http://127.0.0.1:5000/tasks/${encodeURIComponent(e)}`,
         {
@@ -24,62 +38,44 @@ export default function Board() {
           headers: new Headers({ "ngrok-skip-browser-warning": "69420" }),
         }
       );
-
+      
       const data = await response.json();
       const normalized = data.map((t: any) => ({
         ...t,
         status: (t.status || "").toString(),
       }));
-
       setTasks(normalized);
     } catch (error: any) {
       Alert.alert("Something happened: " + (error.message || error));
     }
-  }, [userEmail]);
+  }, [userEmail]); 
 
   useEffect(() => {
-    let authUnsub: any;
-    let metaUnsub: any;
-
-    authUnsub = onAuthStateChanged(auth, async (user) => {
+    // Simplified useEffect from the second component, but added cleanup
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const email = user.email ?? null;
         setUserEmail(email);
         await refreshTasks(email);
-
-        const { getFirestore, doc, onSnapshot } = require("firebase/firestore");
-        const db = getFirestore();
-
-        metaUnsub = onSnapshot(
-          doc(db, "tasksMeta", email),
-          (snapshot: any) => {
-            if (snapshot.exists()) {
-              refreshTasks(email);
-            }
-          }
-        );
       } else {
         setUserEmail(null);
         setTasks([]);
-        if (metaUnsub) metaUnsub();
       }
     });
-
-    return () => {
-      if (authUnsub) authUnsub();
-      if (metaUnsub) metaUnsub();
-    };
-  }, [refreshTasks]);
+    return unsubscribe;
+  }, [refreshTasks]); 
 
   const handleAddTask = async (newTask: TaskInput) => {
+    // optimistic update
     setTasks((prev) => [...prev, newTask]);
-    setShowAddTask(false);
+    setShowAddTask(false); // Close modal on add
     await refreshTasks();
   };
 
   const handleDeleteTask = async (taskId: string) => {
+    // optimistic remove
     setTasks((prev) => prev.filter((task) => task.id !== taskId));
-    setSelectedTask(null);
+    setSelectedTask(null); // Close detail popup if open
     await refreshTasks();
   };
 
@@ -87,6 +83,7 @@ export default function Board() {
     setTasks((prev) =>
       prev.map((task) => task.id === updatedTask.id ? updatedTask : task)
     );
+    // refresh to get authoritative server state
     await refreshTasks();
   };
 
@@ -94,22 +91,12 @@ export default function Board() {
   const acceptedTasks = tasks.filter(task => task.status.toLowerCase() === "accepted");
   const doneTasks = tasks.filter(task => task.status.toLowerCase() === "completed");
 
-  const renderTaskCard = (task: Task) => (
-    <TouchableOpacity 
-      key={task.id} 
-      style={styles.taskCard}
-      onPress={() => setSelectedTask(task)}
-    >
-      <Text style={styles.taskTitle}>{task.title}</Text>
-      <Text style={styles.taskDetails}>{task.date}</Text>
-    </TouchableOpacity>
-  );
-
+  // Re-creating the Task Circle rendering for completed tasks (horizontal scroll)
   const renderTaskCircle = (task: Task) => (
     <TouchableOpacity 
       key={task.id} 
       style={styles.categoryCircle}
-      onPress={() => setSelectedTask(task)}
+      onPress={() => setSelectedTask(task)} // Use the detail popup logic
     >
       <View style={styles.circle} />
       <Text style={styles.categoryLabel}>{task.category || 'Task'}</Text>
@@ -121,12 +108,13 @@ export default function Board() {
       {/* Header */}
       <View style={styles.header}>
         <Image 
+          // Placeholder Image tag - replace with your actual image path
           source={require('../assets/images/Group_5.png')} 
           style={styles.logo}
           resizeMode="contain"
         />
       </View>
-
+      <HorizontalRule />
       {/* Create Task Button */}
       <TouchableOpacity 
         style={styles.createButton}
@@ -134,31 +122,63 @@ export default function Board() {
       >
         <Text style={styles.createButtonText}>Create A Task</Text>
       </TouchableOpacity>
+      <HorizontalRule />
 
       <ScrollView style={styles.scrollView}>
         {/* Current Task Postings (Pending) */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Current Task Postings</Text>
+          <Text style={styles.sectionTitle}>Current Task Postings ({pendingTasks.length})</Text>
         </View>
         {pendingTasks.length > 0 ? (
-          pendingTasks.map(renderTaskCard)
+          pendingTasks.map((task) => (
+             <View key={task.id}> 
+               <Card
+                 id={task.id}
+                 title={task.title}
+                 body={task.body}
+                 status={task.status}
+                 date={task.date}
+                 category={task.category}
+                 volunteerID={task.volunteerID}
+                 onEdit={handleEditTask}
+                 onDelete={handleDeleteTask}
+                 // The Card component's internal logic handles the onPress to open the Popup
+               />
+             </View>
+          ))
         ) : (
           <Text style={styles.emptyText}>No pending tasks</Text>
         )}
+        <HorizontalRule />
 
         {/* In Progress (Accepted) */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>In Progress</Text>
+          <Text style={styles.sectionTitle}>In Progress ({acceptedTasks.length})</Text>
         </View>
         {acceptedTasks.length > 0 ? (
-          acceptedTasks.map(renderTaskCard)
+          acceptedTasks.map((task) => (
+             <View key={task.id}>
+               <Card
+                 id={task.id}
+                 title={task.title}
+                 body={task.body}
+                 status={task.status}
+                 date={task.date}
+                 category={task.category}
+                 volunteerID={task.volunteerID}
+                 onEdit={handleEditTask}
+                 onDelete={handleDeleteTask}
+               />
+             </View>
+          ))
         ) : (
           <Text style={styles.emptyText}>No tasks in progress</Text>
         )}
+        <HorizontalRule />
 
         {/* Completed Tasks */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Completed Tasks</Text>
+          <Text style={styles.sectionTitle}>Completed Tasks ({doneTasks.length})</Text>
         </View>
         {doneTasks.length > 0 ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesScroll}>
@@ -167,17 +187,21 @@ export default function Board() {
         ) : (
           <Text style={styles.emptyText}>No completed tasks</Text>
         )}
+        <HorizontalRule />
       </ScrollView>
 
-      {/* Task Detail Popup */}
+      {/* Task Detail Popup (Modal Overlay) - This is for consistency, though Card uses a Popup component */}
+      {/* If your Card's Popup component is an overlay, you can remove this block. 
+          Keeping it here as it was in the initial styled version. */}
       {selectedTask && (
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>{selectedTask.title}</Text>
             <Text style={styles.modalBody}>{selectedTask.body}</Text>
             <Text style={styles.modalDetails}>Date: {selectedTask.date}</Text>
-            <Text style={styles.modalDetails}>Category: {selectedTask.category}</Text>
+            <Text style={styles.modalDetails}>Category: {selectedTask.category || 'N/A'}</Text>
             <Text style={styles.modalDetails}>Status: {selectedTask.status}</Text>
+            <Text style={styles.modalDetails}>Volunteer ID: {selectedTask.volunteerID || 'N/A'}</Text>
             
             <TouchableOpacity 
               style={styles.closeButton}
@@ -189,10 +213,11 @@ export default function Board() {
         </View>
       )}
 
-      {/* Add Task Modal */}
+      {/* Add Task Modal (Modal Overlay) */}
       {showAddTask && (
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
+            {/* The AddTask component should handle its own form/inputs */}
             <AddTask onAdd={handleAddTask} task={null} />
             <TouchableOpacity 
               style={styles.cancelButton}
@@ -210,24 +235,37 @@ export default function Board() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#2C003E",
+    backgroundColor: "#2C003E", // Dark Purple Background
   },
   header: {
     backgroundColor: "#2C003E",
     paddingVertical: 20,
     alignItems: "center",
+    paddingTop: 40, 
   },
   logo: {
     width: 180,
     height: 60,
   },
+  hr: {
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    borderBottomWidth: 1,
+    marginHorizontal: 10,
+    marginBottom: 5,
+  },
   createButton: {
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "#F5F5F5", // Light Gray Button
     marginHorizontal: 60,
     paddingVertical: 16,
     borderRadius: 30,
     alignItems: "center",
     marginBottom: 20,
+    marginTop: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
   },
   createButtonText: {
     color: "#2C003E",
@@ -238,15 +276,27 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sectionHeader: {
-    backgroundColor: "#8B5CF6",
+    backgroundColor: "#8B5CF6", // Violet Section Header
     paddingVertical: 12,
     paddingHorizontal: 20,
     marginBottom: 15,
+    flexDirection: 'row', 
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   sectionTitle: {
     color: "#fff",
     fontSize: 22,
     fontWeight: "700",
+  },
+  taskCount: { 
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    borderRadius: 12,
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   categoriesScroll: {
     paddingHorizontal: 15,
@@ -262,14 +312,17 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     backgroundColor: "#F5F5F5",
     marginBottom: 8,
+    borderWidth: 3,
+    borderColor: '#fff',
   },
   categoryLabel: {
     color: "#fff",
     fontSize: 14,
     fontWeight: "600",
   },
-  taskCard: {
-    backgroundColor: "#F5F5F5",
+  // These styles are for the Card's appearance/content if rendered inline
+  taskCard: { 
+    backgroundColor: "#F5F5F5", 
     marginHorizontal: 40,
     padding: 20,
     borderRadius: 20,
@@ -293,6 +346,7 @@ const styles = StyleSheet.create({
     marginVertical: 20,
     opacity: 0.7,
   },
+  // Modal Styles
   modalOverlay: {
     position: "absolute",
     top: 0,
@@ -343,7 +397,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     padding: 15,
     backgroundColor: "#ccc",
-    borderRadius: 10,
+    borderRadius: 30,
     alignItems: "center",
   },
   cancelButtonText: {

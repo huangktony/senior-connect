@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import { auth } from "../firebaseConfig";
 
 export default function EmailEntry() {
+  
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();

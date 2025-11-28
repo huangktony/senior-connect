@@ -1,8 +1,24 @@
 import React, { useState, useEffect } from "react";
-import { View, TextInput, Button, StyleSheet, Modal, Text, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, TextInput, Button, StyleSheet, Modal, Text, TouchableOpacity, ActivityIndicator, Platform } from "react-native";
 import { Task } from "./types";
 import DateTimePickerField from "./DateTimePicker";
 import { Picker } from '@react-native-picker/picker';
+
+// Define the new color palette for consistency
+const COLORS = {
+  primary: '#4CAF50', // Green for Save/Primary action
+  danger: '#FF3B30', // Red for Delete
+  secondary: '#FF9800', // Orange accent (not used here, but available)
+  background: '#F0F4F7', // Light gray/blue for muted backgrounds
+  card: '#FFFFFF', // White for the modal container
+  text: '#37474F', // Dark, readable text
+  border: '#DCE0E3', // Soft gray border
+  placeholder: '#90A4AE', // Muted color for placeholders
+  accepted: '#2196F3', // Blue for Accepted status
+  completed: '#4CAF50', // Green for Completed status
+  pending: '#FF9800', // Orange for Pending status
+  gray: '#9E9E9E', // Gray for Cancel button
+};
 
 interface PopupProps extends Task {
   onClose: () => void;
@@ -24,8 +40,7 @@ export default function Popup({ id, title, body, status, volunteerID, date, cate
         setLoadingVolunteer(true);
         try {
           const res = await fetch(`http://127.0.0.1:5000/users/${encodeURIComponent(volunteerID)}`, {
-            method: "GET",
-            headers: { "ngrok-skip-browser-warning": "69420" }
+            method: "GET"
           });
           const data = await res.json();
           setVolunteerInfo(data);
@@ -45,7 +60,6 @@ export default function Popup({ id, title, body, status, volunteerID, date, cate
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          "ngrok-skip-browser-warning": "69420"
         }
       });
       if (!response.ok) throw new Error("Failed to delete task");
@@ -58,10 +72,9 @@ export default function Popup({ id, title, body, status, volunteerID, date, cate
 
   const handleSave = async () => {
     try {
-      console.log(newCategory);
       const response = await fetch(`http://127.0.0.1:5000/tasks/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "69420" },
+        headers: { "Content-Type": "application/json"},
         body: JSON.stringify({ title: newTitle, body: newBody, status: status, date: newDate, category: newCategory}),
       });
       if (!response.ok) throw new Error("Failed to update task");
@@ -76,78 +89,114 @@ export default function Popup({ id, title, body, status, volunteerID, date, cate
   const lowerStatus = status.toLowerCase();
   const isEditable = lowerStatus === "pending";
   const showVolunteer = true;
-  
+
+  const getStatusStyle = () => {
+    switch(lowerStatus) {
+      case 'accepted':
+        return { backgroundColor: COLORS.accepted, color: COLORS.card };
+      case 'completed':
+        return { backgroundColor: COLORS.completed, color: COLORS.card };
+      case 'pending':
+      default:
+        return { backgroundColor: COLORS.pending, color: COLORS.card };
+    }
+  };
+
   return (
-    <Modal transparent animationType="slide" visible>
+    <Modal transparent animationType="fade" visible>
       <View style={styles.overlay}>
         <View style={styles.container}>
           <Text style={styles.header}>Task Details</Text>
 
-          {/* Editable for Pending, read-only for Accepted/Completed */}
+          <View style={[styles.statusBadge, getStatusStyle()]}>
+              <Text style={styles.statusText}>{status.toUpperCase()}</Text>
+          </View>
+
+          {/* Title */}
+          <Text style={styles.label}>Title</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, !isEditable && styles.readOnlyInput]}
             value={isEditable ? newTitle : title}
             onChangeText={isEditable ? setNewTitle : undefined}
-            placeholder="Title"
+            placeholder="Task Title"
             editable={isEditable}
+            placeholderTextColor={COLORS.placeholder}
           />
+          
+          {/* Description */}
+          <Text style={styles.label}>Description</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, styles.textArea, !isEditable && styles.readOnlyInput]}
             value={isEditable ? newBody : body}
             onChangeText={isEditable ? setNewBody : undefined}
-            placeholder="Description"
+            placeholder="Task Description"
             editable={isEditable}
+            multiline={true}
+            numberOfLines={4}
+            placeholderTextColor={COLORS.placeholder}
           />
-          {status === "pending" ? (
-          <Picker
-              selectedValue={newCategory}
-              onValueChange={(itemValue) => setNewCategory(itemValue)}
-              style={styles.picker}
-            >
+
+          {/* Category */}
+          <Text style={styles.label}>Category</Text>
+          {isEditable ? (
+            <View style={styles.pickerWrapper}>
+              <Picker
+                selectedValue={newCategory}
+                onValueChange={(itemValue) => setNewCategory(itemValue)}
+                style={styles.picker}
+                itemStyle={{ color: COLORS.text }}
+              >
                   <Picker.Item label="Errands" value="Errands" />
                   <Picker.Item label="Electronics" value="Electronics" />
                   <Picker.Item label="Chores" value="Chores" />
                   <Picker.Item label="Events" value="Events" />
-          </Picker>
+              </Picker>
+            </View>
           ) : (
-            <Text style={styles.input}>Category: {category}</Text>
+             <Text style={[styles.readOnlyInput, styles.readOnlyText]}>{category}</Text>
           )}
-          <DateTimePickerField
-            value={new Date(date)}
-            onChange={(jDate: Date) => {
-              setNewDate(jDate.toString());
-            }}
-          />
-
-          <Text style={styles.pendingMsg}>{status}</Text>
-
+          
+          {/* Date Picker */}
+          <Text style={styles.label}>Due Date</Text>
+          <View style={styles.datePickerWrapper}>
+            <DateTimePickerField
+              value={new Date(date)}
+              onChange={(jDate: Date) => {
+                setNewDate(jDate.toString());
+              }}
+            />
+          </View>
+          
           {/* Volunteer info for Accepted/Completed */}
           {(showVolunteer && status.toLowerCase() !== "pending") && (
             <View style={styles.volunteerBox}>
-              <Text style={styles.volunteerHeader}>{status == "accepted" ? "Accepted by:" : "Completed by"}</Text>
+              <Text style={styles.volunteerHeader}>{status.toLowerCase() === "accepted" ? "Accepted by:" : "Completed by:"}</Text>
               {loadingVolunteer ? (
-                <ActivityIndicator size="small" />
+                <ActivityIndicator size="small" color={COLORS.primary} />
               ) : volunteerInfo ? (
                 <>
                   <Text style={styles.volunteerName}>{volunteerInfo.firstName} {volunteerInfo.lastName}</Text>
-                  <Text>Email: {volunteerInfo.email}</Text>
-                  <Text>Location: {volunteerInfo.latitude}, {volunteerInfo.longitude}</Text>
+                  <Text style={styles.volunteerDetail}>Email: {volunteerInfo.email}</Text>
+                  <Text style={styles.volunteerDetail}>Phone: {volunteerInfo.phoneNumber}</Text>
                 </>
               ) : (
-                <Text>Volunteer info not found.</Text>
+                <Text style={styles.volunteerDetail}>Volunteer info not found or task is pending acceptance.</Text>
               )}
             </View>
           )}
 
-          {/* Pending: show message if no volunteer */}
-          {isEditable && !volunteerID && (
-            <Text style={styles.pendingMsg}>No volunteer has accepted yet.</Text>
-          )}
-
           <View style={styles.buttons}>
-            {isEditable && <Button title="Save" onPress={handleSave} />}
-            <Button title="Cancel" onPress={onClose} color="gray" />
-            <Button title="Delete" onPress={handleDelete} color="red" />
+            {isEditable && (
+              <TouchableOpacity style={[styles.button, styles.saveButton]} onPress={handleSave}>
+                <Text style={styles.buttonText}>Save</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={onClose}>
+              <Text style={styles.buttonText}>Close</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.button, styles.deleteButton]} onPress={handleDelete}>
+              <Text style={styles.buttonText}>Delete</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -158,81 +207,141 @@ export default function Popup({ id, title, body, status, volunteerID, date, cate
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(0,0,0,0.6)", // Darker overlay for better focus
     justifyContent: "center",
     alignItems: "center",
   },
   container: {
-    width: "80%",
-    backgroundColor: "white",
-    borderRadius: 10,
-    padding: 20,
-    elevation: 5,
+    width: "85%", // Slightly smaller width
+    height: "95%",
+    maxWidth: 380, // Slightly smaller max width
+    backgroundColor: COLORS.card,
+    borderRadius: 15, // Increased border radius
+    padding: 20, // Reduced padding
+    elevation: 10,
+    shadowColor: COLORS.text,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
   },
   header: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
+    fontSize: 22,
+    fontWeight: "700",
+    color: COLORS.text,
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  label: {
+    fontSize: 14,
+    color: COLORS.text,
+    fontWeight: '600',
+    marginTop: 5,
+    marginBottom: 4,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: COLORS.border,
+    color: COLORS.text,
     borderRadius: 8,
-    padding: 8,
+    padding: 12,
     marginBottom: 10,
+    backgroundColor: COLORS.background, // Light background for inputs
+    fontSize: 16,
   },
-  dropdownTrigger: {
-    justifyContent: "center",
+  textArea: {
+    minHeight: 80,
+    textAlignVertical: 'top',
   },
-  dropdown: {
+  readOnlyInput: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.background,
+    padding: 12,
     borderRadius: 8,
-    backgroundColor: "#fff",
     marginBottom: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 4,
+    justifyContent: 'center',
   },
-  option: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+  readOnlyText: {
+    fontSize: 16,
+    color: COLORS.text,
+  },
+  pickerWrapper: {
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 8,
+    marginBottom: 10,
+    backgroundColor: COLORS.background,
+    overflow: 'hidden',
+  },
+  picker: {
+    height: Platform.OS === 'ios' ? 150 : 50,
+    width: '100%',
+  },
+  datePickerWrapper: {
+    marginBottom: 15,
+    // Style wrapper if needed to distinguish the date picker area
+  },
+  statusBadge: {
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 15,
+    alignSelf: 'flex-end',
+    marginBottom: 15,
+  },
+  statusText: {
+    fontWeight: "bold",
+    color: COLORS.card,
+    fontSize: 12,
+  },
+  volunteerBox: {
+    backgroundColor: COLORS.background,
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 0,
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.accepted, // Use a primary color for emphasis
+  },
+  volunteerHeader: {
+    fontWeight: "700",
+    fontSize: 14,
+    marginBottom: 6,
+    color: COLORS.text,
+  },
+  volunteerName: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: COLORS.text,
+    marginBottom: 4,
+  },
+  volunteerDetail: {
+    fontSize: 14,
+    color: COLORS.text,
   },
   buttons: {
     flexDirection: "row",
     justifyContent: "space-between",
+    marginTop: 20,
   },
-  statusText: {
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  pendingMsg: {
-    color: "#888",
-    marginBottom: 10,
-    fontStyle: "italic",
-  },
-  volunteerBox: {
-    backgroundColor: "#f3f4f6",
+  button: {
+    paddingVertical: 12,
+    paddingHorizontal: 10,
     borderRadius: 8,
-    padding: 10,
-    marginBottom: 10,
+    flex: 1,
+    marginHorizontal: 5,
+    alignItems: 'center',
   },
-  volunteerHeader: {
-    fontWeight: "bold",
-    marginBottom: 4,
+  buttonText: {
+    color: COLORS.card,
+    fontWeight: '600',
+    fontSize: 14,
   },
-  volunteerName: {
-    fontSize: 16,
-    fontWeight: "bold",
+  saveButton: {
+    backgroundColor: COLORS.primary,
   },
-  picker: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    color: 'black',
-    borderRadius: 8,
-    padding: 8,
-    marginBottom: 10,
-  }
+  cancelButton: {
+    backgroundColor: COLORS.gray,
+  },
+  deleteButton: {
+    backgroundColor: COLORS.danger,
+  },
 });

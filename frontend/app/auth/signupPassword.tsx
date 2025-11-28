@@ -6,39 +6,54 @@ import {
   TouchableOpacity,
   StyleSheet,
   Platform,
+  Alert
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth, db } from "../../firebaseConfig";
-import { doc, setDoc } from "firebase/firestore";
+import { auth } from "../../firebaseConfig";
 import { MotiView } from "moti";
 import { useLocalSearchParams } from "expo-router";
 
-
 export default function SignupPassword({ route }: any) {
-  const { email } = useLocalSearchParams();
+  const { email, role } = useLocalSearchParams();
   const userEmail = Array.isArray(email) ? email[0] : email || "";
   const [password, setPassword] = useState("");
   const router = useRouter();
+  const handleCreate = async () => {
+      try {
+        console.log("Creating record...");
+        const response = await fetch(
+          "http://127.0.0.1:5000/users",
+          {
+            method: "POST",
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({email: userEmail, type: role}),
+          }
+        );
+        console.log(response.text());
+        console.log("User created.")
+      } catch (error) {
+        Alert.alert("Error saving profile");
+      }
+    };
 
   const handleSignup = async () => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(
+      console.log("creating user...");
+      await handleCreate();
+      await createUserWithEmailAndPassword(
         auth,
         userEmail,
         password
       );
-      const user = userCredential.user;
-
       // Create a basic user entry in Firestore
-      await setDoc(doc(db, "users", userEmail), {
-        email: userEmail,
-        createdAt: new Date().toISOString(),
-        uid: user.uid,
-      });
-
-      router.replace("/board");
+      console.log("created user");
+      
+      
     } catch (error: any) {
       console.error(error);
       alert("Signup failed: " + error.message);

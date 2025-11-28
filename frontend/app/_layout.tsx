@@ -1,43 +1,61 @@
-import { Stack, useRouter } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import { useEffect, useState } from "react";
-import { onAuthStateChanged, getAuth, User } from "firebase/auth";
-import { View, ActivityIndicator } from "react-native";
-import { auth } from "../firebaseConfig"; // adjust if your path differs
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../firebaseConfig";
 
 export default function RootLayout() {
-  const [user, setUser] = useState<User | null | undefined>(undefined);
+  const [initializing, setInitializing] = useState(true);
   const router = useRouter();
+  const segments = useSegments();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        console.log("No user logged in");
+        setInitializing(false);
+        // Navigation will happen after render
+        setTimeout(() => router.replace("/"), 0);
+        return;
+      }
+      
+      try {
+        const res = await fetch(
+          `http://127.0.0.1:5000/users/${encodeURIComponent(user.email!)}`
+        );
+        const profile = await res.json();
+        console.log(profile);
+        setInitializing(false);
+        
+        // Navigate after state update
+        setTimeout(() => {
+          if (profile.type === "senior") {
+            if (!profile.hasInfo) {
+              router.push(`/CreateElder?email=${encodeURIComponent(profile.email)}`);
+            } else {
+              router.replace("/(elderTabs)");
+            }
+          } else {
+            router.replace("/(volunteerTabs)");
+          }
+        }, 0);
+      } catch (err) {
+        console.error("Profile fetch error", err);
+        setInitializing(false);
+      }
     });
-    return unsubscribe;
+
+    return unsub;
   }, []);
-  useEffect(() => {
-    if (user === undefined) return; // still checking
 
-    if (user === null) {
-      router.replace("/"); // go to Login (index.tsx)
-    } else {
-      router.replace("/(tabs)"); // go to your main board page
-    }
-  }, [user]);
-
-  if (user === undefined) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: "#fff",
-        }}
-      >
-        <ActivityIndicator size="large" color="#007AFF" />
-      </View>
-    );
-  }
-
-  return <Stack screenOptions={{ headerShown: false }} />;
+  // Always render Stack, but don't show content until initialized
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      {initializing && (
+        <Stack.Screen
+          name="loading"
+          options={{ headerShown: false }}
+        />
+      )}
+    </Stack>
+  );
 }

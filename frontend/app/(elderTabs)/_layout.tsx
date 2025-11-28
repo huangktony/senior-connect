@@ -21,25 +21,21 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="home" color={color} size={32} />
-          ),
+          tabBarIcon: ({ color }) => <Ionicons name="home" color={color} size={32} />,
         }}
       />
+
       <Tabs.Screen
         name="Chat"
         options={{
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="sparkles" color={color} size={32} />
-          ),
+          tabBarIcon: ({ color }) => <Ionicons name="sparkles" color={color} size={32} />,
         }}
       />
+
       <Tabs.Screen
         name="Profile"
         options={{
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="person" color={color} size={32} />
-          ),
+          tabBarIcon: ({ color }) => <Ionicons name="person" color={color} size={32} />,
         }}
       />
     </Tabs>

@@ -10,11 +10,12 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { auth } from "../firebaseConfig";
-import { onAuthStateChanged } from "firebase/auth";
-
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { useRouter } from "expo-router";
 export default function ElderProfile() {
   const [activeTab, setActiveTab] = useState("profile");
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const router = useRouter();
   const [profile, setProfile] = useState({
     firstName: "",
     lastName: "",
@@ -41,13 +42,17 @@ export default function ElderProfile() {
     return unsubscribe;
   }, []);
 
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.replace("/Login");
+  };
+
   const fetchProfile = async (email: string) => {
     try {
       const response = await fetch(
         `http://127.0.0.1:5000/users/${encodeURIComponent(email)}`,
         {
           method: "GET",
-          headers: { "ngrok-skip-browser-warning": "69420" },
         }
       );
       const data = await response.json();
@@ -72,8 +77,7 @@ export default function ElderProfile() {
         {
           method: "PATCH",
           headers: {
-            "Content-Type": "application/json",
-            "ngrok-skip-browser-warning": "69420",
+            "Content-Type": "application/json"
           },
           body: JSON.stringify(profile),
         }
@@ -108,6 +112,12 @@ export default function ElderProfile() {
               onPress={() => setActiveTab("payment")}
             >
               <Text style={[styles.tabButtonText, activeTab === "payment" && styles.activeTabText]}>Payment</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.logoutButton}
+              onPress={handleLogout}
+            >
+              <Text style={[styles.activeTabText]}>Logout</Text>
             </TouchableOpacity>
           </View>
           <TouchableOpacity
@@ -275,6 +285,14 @@ const styles = StyleSheet.create({
   },
   tabButton: {
     backgroundColor: "#E0E0E0",
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginBottom: 6,
+    alignItems: "center",
+    width: "100%",
+  },
+  logoutButton: {
+    backgroundColor: "#ca0e0eff",
     paddingVertical: 8,
     borderRadius: 20,
     marginBottom: 6,

@@ -1,3 +1,4 @@
 Flask
 firebase-admin
 flask-cors
+google-genai

@@ -14,7 +14,7 @@ import datetime
 
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app, origins="http://localhost:8081")
 
 cred = credentials.Certificate("serviceAccountKey.json")
 firebase_admin.initialize_app(cred)
@@ -131,17 +131,31 @@ def add_task():
 @app.route('/users', methods=['POST'])
 def add_user():
     data = request.get_json()
-    task_ref = db.collection('users').document()
-    task_ref.set({
-        'first-name': data['first-name'],
-        'last-name': data['last-name'],
-        'latitude': data['latitude'],
-        'longitude': data['longitude'],
-        'skills': data['skills'],
-        'type': data['type'],
-        'distance': data['distance'],
-        'email': data['email']
-    })
+    task_ref = db.collection('users').document(data.get('email'))
+
+    payload = {
+        'firstName': data.get('firstName'),
+        'lastName': data.get('lastName'),
+        'latitude': data.get('latitude'),
+        'longitude': data.get('longitude'),
+        'skills': data.get('skills'),
+        'type': data.get('type'),
+        'distance': data.get('distance'),
+        'email': data.get('email'),
+        'address': data.get('address'),
+        'city': data.get('city'),
+        'state': data.get('state'),
+        'zipCode': data.get('zipCode'),
+        'phoneNumber': data.get('phoneNumber'),
+        'hasInfo': False
+    }
+
+    # Only add elderEmail if it exists and is not None
+    if data.get('elderEmail') is not None:
+        payload['elderEmail'] = data['elderEmail']
+
+    task_ref.set(payload)
+
     return jsonify({'id': task_ref.id, 'message': 'User added successfully!'}), 201
 
 
@@ -160,11 +174,16 @@ def get_user(email):
 def update_user(email):
     data = request.get_json()
     user_ref = db.collection('users').document(email)
+    if (data.get('hasInfo') == True):
+        user_ref.update({
+            'hasInfo': True
+        })
+        return jsonify({'message': 'User updated successfully!'})
     user_ref.update({
         'firstName': data.get('firstName'),
         'lastName': data.get('lastName'),
         'latitude': data.get('latitude'),
-        'longitude': data.get('longitude')
+        'longitude': data.get('longitude'),
     })
     return jsonify({'message': 'User updated successfully!'})
 
