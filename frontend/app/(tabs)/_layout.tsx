@@ -13,6 +13,8 @@ export default function TabsLayout() {
           height: 60,
           paddingBottom: 10,
           paddingTop: 5,
+          elevation: 0, // Remove shadow on Android
+          shadowOpacity: 0, // Remove shadow on iOS
         },
         tabBarActiveTintColor: "#FFFFFF",
         tabBarInactiveTintColor: "#FFFFFF",
