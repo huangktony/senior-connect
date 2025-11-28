@@ -1,6 +1,4 @@
 {
   "compilerOptions": {},
-  "extends": "expo/tsconfig.base",
-  "exclude": ["frontend/**", "node_modules"]
-
+  "extends": "expo/tsconfig.base"
 }

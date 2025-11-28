@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
 import { Stack, useRouter } from "expo-router";
-import { onAuthStateChanged, User } from "firebase/auth";
-import { auth } from "./firebaseConfig";
-import { ActivityIndicator, View } from "react-native";
+import { useEffect, useState } from "react";
+import { onAuthStateChanged, getAuth, User } from "firebase/auth";
+import { View, ActivityIndicator } from "react-native";
+import { auth } from "../firebaseConfig"; // adjust if your path differs
 
 export default function RootLayout() {
   const [user, setUser] = useState<User | null | undefined>(undefined);
@@ -14,28 +14,30 @@ export default function RootLayout() {
     });
     return unsubscribe;
   }, []);
-
   useEffect(() => {
-    if (user === undefined) return; 
+    if (user === undefined) return; // still checking
 
     if (user === null) {
-      // not logged in
-      router.replace("/Login");
+      router.replace("/"); // go to Login (index.tsx)
     } else {
-      // logged in
-      router.replace("/(tabs)");
+      router.replace("/(tabs)"); // go to your main board page
     }
   }, [user]);
 
-  // loading screen while checking auth
   if (user === undefined) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator size="large" />
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "#fff",
+        }}
+      >
+        <ActivityIndicator size="large" color="#007AFF" />
       </View>
     );
   }
 
-  // Still render your app structure so Stack is defined
-  return <Stack />;
+  return <Stack screenOptions={{ headerShown: false }} />;
 }
