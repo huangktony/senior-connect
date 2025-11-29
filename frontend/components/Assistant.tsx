@@ -176,6 +176,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 20,
     backgroundColor: "#fff",
+    paddingBottom: 90,
   },
   micButton: {
     marginBottom: 30,

@@ -383,7 +383,10 @@ export default function AddTask({ onAdd, task, onClose }: AddTaskProps) {
             </TouchableOpacity>
           )}
           <TouchableOpacity
-            style={[styles.nextButton, step === 1 && { flex: 1 }]}
+            style={[
+              styles.nextButton, 
+              step === 1 && styles.nextButtonFullWidth
+            ]}
             onPress={handleNext}
             disabled={isSubmitting}
           >
@@ -401,6 +404,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F5F5F5",
+    paddingBottom: 70, // Account for tab bar height
   },
   header: {
     paddingTop: 50,
@@ -416,18 +420,18 @@ const styles = StyleSheet.create({
   stepContainer: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingTop: 30,
   },
   title: {
     fontSize: 32,
     fontWeight: "700",
     color: "#000",
-    marginBottom: 8,
+    marginBottom: 5,
   },
   subtitle: {
     fontSize: 16,
     color: "#555",
-    marginBottom: 30,
+    marginBottom: 40,
     lineHeight: 20,
   },
   label: {
@@ -459,13 +463,13 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 15,
+    marginTop: 30,
     marginBottom: 0,
     paddingHorizontal: 15,
   },
   categoryBox: {
-    width: "44%",
-    aspectRatio: 1,
+    width: "45%",
+    aspectRatio: 1.2,
     margin: 7,
     backgroundColor: "#E0E0E0",
     borderRadius: 16,
@@ -556,8 +560,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    paddingTop: 30,
-    paddingBottom: 10,
+    paddingTop: 25,
+    paddingBottom: 15,
     gap: 8,
   },
   progressDot: {
@@ -575,8 +579,8 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: "row",
     paddingHorizontal: 20,
-    paddingBottom: 50,
-    paddingTop: 15,
+    paddingBottom: 40,
+    paddingTop: 10,
     gap: 15,
   },
   backButton: {
@@ -597,6 +601,9 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     paddingVertical: 18,
     alignItems: "center",
+  },
+  nextButtonFullWidth: {
+    marginHorizontal: 40,
   },
   nextButtonText: {
     color: "#fff",

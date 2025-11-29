@@ -309,6 +309,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F5F5F5",
+    paddingBottom: 70, // Account for tab bar
   },
   header: {
     backgroundColor: "#fff",
@@ -405,7 +406,7 @@ const styles = StyleSheet.create({
   },
   bottomButtonContainer: {
     position: "absolute",
-    bottom: 20,
+    bottom: 90,
     left: 20,
     right: 20,
   },

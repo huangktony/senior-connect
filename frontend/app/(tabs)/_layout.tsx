@@ -10,11 +10,15 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: "#7B3B7A",
           borderTopWidth: 0,
-          height: 60,
-          paddingBottom: 10,
-          paddingTop: 5,
+          height: 70,
+          paddingBottom: 15,
+          paddingTop: 10,
           elevation: 0, // Remove shadow on Android
           shadowOpacity: 0, // Remove shadow on iOS
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          position: 'absolute',
+          overflow: 'hidden',
         },
         tabBarActiveTintColor: "#FFFFFF",
         tabBarInactiveTintColor: "#FFFFFF",
