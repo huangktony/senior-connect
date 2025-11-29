@@ -1,41 +1,54 @@
 import React, { useCallback, useState, useEffect } from "react";
-import { View, FlatList, StyleSheet, Alert, Text, ScrollView, TouchableOpacity, Image } from "react-native";
+import {
+  View,
+  FlatList,
+  StyleSheet,
+  Alert,
+  Text,
+  TouchableOpacity,
+  Image,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import AddTask from "./AddTask";
-import Popup from "./Popup";  // Add this import
+import Popup from "./Popup";
 import { Task, TaskInput } from "./types";
-import { auth } from '../firebaseConfig'; 
-import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from "../firebaseConfig";
+import { onAuthStateChanged } from "firebase/auth";
 
 export default function Board() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [showAddTask, setShowAddTask] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [activeTab, setActiveTab] = useState<"active" | "history">("active");
 
-  const refreshTasks = useCallback(async (email?: string | null) => {
-    const e = email ?? userEmail;
-    if (!e) return;
+  const refreshTasks = useCallback(
+    async (email?: string | null) => {
+      const e = email ?? userEmail;
+      if (!e) return;
 
-    try {
-      const response = await fetch(
-        `http://127.0.0.1:5000/tasks/${encodeURIComponent(e)}`,
-        {
-          method: "GET",
-          headers: new Headers({ "ngrok-skip-browser-warning": "69420" }),
-        }
-      );
+      try {
+        const response = await fetch(
+          `http://127.0.0.1:5000/tasks/${encodeURIComponent(e)}`,
+          {
+            method: "GET",
+            headers: new Headers({ "ngrok-skip-browser-warning": "69420" }),
+          }
+        );
 
-      const data = await response.json();
-      const normalized = data.map((t: any) => ({
-        ...t,
-        status: (t.status || "").toString(),
-      }));
+        const data = await response.json();
+        const normalized = data.map((t: any) => ({
+          ...t,
+          status: (t.status || "").toString(),
+        }));
 
-      setTasks(normalized);
-    } catch (error: any) {
-      Alert.alert("Something happened: " + (error.message || error));
-    }
-  }, [userEmail]);
+        setTasks(normalized);
+      } catch (error: any) {
+        Alert.alert("Something happened: " + (error.message || error));
+      }
+    },
+    [userEmail]
+  );
 
   useEffect(() => {
     let authUnsub: any;
@@ -85,123 +98,208 @@ export default function Board() {
 
   const handleEditTask = async (updatedTask: Task) => {
     setTasks((prev) =>
-      prev.map((task) => task.id === updatedTask.id ? updatedTask : task)
+      prev.map((task) => (task.id === updatedTask.id ? updatedTask : task))
     );
     await refreshTasks();
   };
 
-  const pendingTasks = tasks.filter(task => task.status.toLowerCase() === "pending");
-  const acceptedTasks = tasks.filter(task => task.status.toLowerCase() === "accepted");
-  const doneTasks = tasks.filter(task => task.status.toLowerCase() === "completed");
+  // Filter tasks based on active tab
+  const activeTasks = tasks.filter(
+    (task) =>
+      task.status.toLowerCase() === "pending" ||
+      task.status.toLowerCase() === "accepted"
+  );
+  const historyTasks = tasks.filter(
+    (task) => task.status.toLowerCase() === "completed"
+  );
 
-  const renderTaskCard = (task: Task) => (
-    <TouchableOpacity 
-      key={task.id} 
+  const displayedTasks = activeTab === "active" ? activeTasks : historyTasks;
+
+  // Get category icon
+  const getCategoryIcon = (category: string) => {
+    const icons: { [key: string]: any } = {
+      Shopping: "cart-outline",
+      Transportation: "car-outline",
+      "Home Help": "home-outline",
+      Technology: "phone-portrait-outline",
+      Companionship: "people-outline",
+      Other: "ellipsis-horizontal-circle-outline",
+      // Keep old ones for backward compatibility
+      Errands: "cart-outline",
+      Electronics: "phone-portrait-outline",
+      Chores: "hammer-outline",
+      Events: "calendar-outline",
+    };
+    return icons[category] || "list-outline";
+  };
+
+  // Get status color
+  const getStatusColor = (status: string) => {
+    const statusLower = status.toLowerCase();
+    if (statusLower === "pending") return "#FF9500";
+    if (statusLower === "accepted") return "#34C759";
+    if (statusLower === "completed") return "#8E8E93";
+    return "#FF9500";
+  };
+
+  // Format date
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  // Format time
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
+  const renderTaskCard = ({ item }: { item: Task }) => (
+    <TouchableOpacity
       style={styles.taskCard}
-      onPress={() => setSelectedTask(task)}
+      onPress={() => setSelectedTask(item)}
+      activeOpacity={0.7}
     >
-      <Text style={styles.taskTitle}>{task.title}</Text>
-      <Text style={styles.taskDetails}>{task.date}</Text>
+      <View style={styles.cardContent}>
+        <Text style={styles.taskTitle}>{item.title}</Text>
+        <Text style={styles.taskDescription}>{item.body}</Text>
+
+        <View style={styles.taskMeta}>
+          <View style={styles.metaRow}>
+            <Ionicons name="calendar-outline" size={16} color="#666" />
+            <Text style={styles.metaText}>{formatDate(item.date)}</Text>
+          </View>
+          <View style={styles.metaRow}>
+            <Ionicons name="time-outline" size={16} color="#666" />
+            <Text style={styles.metaText}>{formatTime(item.date)}</Text>
+          </View>
+        </View>
+      </View>
+
+      <View
+        style={[
+          styles.statusIndicator,
+          { backgroundColor: getStatusColor(item.status) },
+        ]}
+      />
     </TouchableOpacity>
   );
 
-  const renderTaskCircle = (task: Task) => (
-    <TouchableOpacity 
-      key={task.id} 
-      style={styles.categoryCircle}
-      onPress={() => setSelectedTask(task)}
-    >
-      <View style={styles.circle} />
-      <Text style={styles.categoryLabel}>{task.category || 'Task'}</Text>
-    </TouchableOpacity>
-  );
+  // If showing AddTask, render it full screen (AFTER all hooks)
+  if (showAddTask) {
+    return (
+      <View style={{ flex: 1 }}>
+        <AddTask 
+          onAdd={(task) => {
+            handleAddTask(task);
+            setShowAddTask(false);
+          }} 
+          task={null}
+          onClose={() => setShowAddTask(false)}
+        />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+      {/* Header with Avatar and Tabs */}
       <View style={styles.header}>
-        <Image 
-          source={require('../assets/images/Group_5.png')} 
-          style={styles.logo}
-          resizeMode="contain"
-        />
+        <View style={styles.avatarContainer}>
+          <View style={styles.avatar}>
+            <Ionicons name="person" size={32} color="#fff" />
+          </View>
+        </View>
+
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
+            style={[
+              styles.tab,
+              activeTab === "active" && styles.activeTab,
+            ]}
+            onPress={() => setActiveTab("active")}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === "active" && styles.activeTabText,
+              ]}
+            >
+              Active
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.tab,
+              activeTab === "history" && styles.activeTab,
+            ]}
+            onPress={() => setActiveTab("history")}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === "history" && styles.activeTabText,
+              ]}
+            >
+              History
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* Create Task Button */}
-      <TouchableOpacity 
-        style={styles.createButton}
-        onPress={() => setShowAddTask(true)}
-      >
-        <Text style={styles.createButtonText}>Create A Task</Text>
-      </TouchableOpacity>
-
-      <ScrollView style={styles.scrollView}>
-        {/* Current Task Postings (Pending) */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Current Task Postings</Text>
-        </View>
-        {pendingTasks.length > 0 ? (
-          pendingTasks.map(renderTaskCard)
-        ) : (
-          <Text style={styles.emptyText}>No pending tasks</Text>
-        )}
-
-        {/* In Progress (Accepted) */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>In Progress</Text>
-        </View>
-        {acceptedTasks.length > 0 ? (
-          acceptedTasks.map(renderTaskCard)
-        ) : (
-          <Text style={styles.emptyText}>No tasks in progress</Text>
-        )}
-
-        {/* Completed Tasks */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Completed Tasks</Text>
-        </View>
-        {doneTasks.length > 0 ? (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesScroll}>
-            {doneTasks.map(renderTaskCircle)}
-          </ScrollView>
-        ) : (
-          <Text style={styles.emptyText}>No completed tasks</Text>
-        )}
-      </ScrollView>
-
-      {/* Task Detail Popup */}
-      {selectedTask && (
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>{selectedTask.title}</Text>
-            <Text style={styles.modalBody}>{selectedTask.body}</Text>
-            <Text style={styles.modalDetails}>Date: {selectedTask.date}</Text>
-            <Text style={styles.modalDetails}>Category: {selectedTask.category}</Text>
-            <Text style={styles.modalDetails}>Status: {selectedTask.status}</Text>
-            
-            <TouchableOpacity 
-              style={styles.closeButton}
-              onPress={() => setSelectedTask(null)}
-            >
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
+      {/* Task List */}
+      <FlatList
+        data={displayedTasks}
+        renderItem={renderTaskCard}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContainer}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Ionicons name="clipboard-outline" size={64} color="#ccc" />
+            <Text style={styles.emptyText}>
+              {activeTab === "active"
+                ? "No active tasks"
+                : "No completed tasks"}
+            </Text>
           </View>
+        }
+      />
+
+      {/* Request Volunteer Button (shown only on active tab) */}
+      {activeTab === "active" && (
+        <View style={styles.bottomButtonContainer}>
+          <TouchableOpacity
+            style={styles.requestButton}
+            onPress={() => setShowAddTask(true)}
+          >
+            <Text style={styles.requestButtonText}>Request Volunteer</Text>
+          </TouchableOpacity>
         </View>
       )}
 
-      {/* Add Task Modal */}
-      {showAddTask && (
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <AddTask onAdd={handleAddTask} task={null} />
-            <TouchableOpacity 
-              style={styles.cancelButton}
-              onPress={() => setShowAddTask(false)}
-            >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+      {/* Task Detail Popup */}
+      {selectedTask && (
+        <Popup
+          id={selectedTask.id}
+          title={selectedTask.title}
+          body={selectedTask.body}
+          status={selectedTask.status}
+          date={selectedTask.date}
+          category={selectedTask.category}
+          volunteerID={selectedTask.volunteerID}
+          onClose={() => setSelectedTask(null)}
+          onDelete={handleDeleteTask}
+          onSave={handleEditTask}
+        />
       )}
     </View>
   );
@@ -210,145 +308,135 @@ export default function Board() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#2C003E",
+    backgroundColor: "#F5F5F5",
+    paddingBottom: 70, // Account for tab bar
   },
   header: {
-    backgroundColor: "#2C003E",
-    paddingVertical: 20,
-    alignItems: "center",
-  },
-  logo: {
-    width: 180,
-    height: 60,
-  },
-  createButton: {
-    backgroundColor: "#F5F5F5",
-    marginHorizontal: 60,
-    paddingVertical: 16,
-    borderRadius: 30,
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  createButtonText: {
-    color: "#2C003E",
-    fontSize: 20,
-    fontWeight: "700",
-  },
-  scrollView: {
-    flex: 1,
-  },
-  sectionHeader: {
-    backgroundColor: "#8B5CF6",
-    paddingVertical: 12,
+    backgroundColor: "#fff",
+    paddingTop: 50,
+    paddingBottom: 10,
     paddingHorizontal: 20,
-    marginBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E5E5",
   },
-  sectionTitle: {
-    color: "#fff",
-    fontSize: 22,
-    fontWeight: "700",
-  },
-  categoriesScroll: {
-    paddingHorizontal: 15,
+  avatarContainer: {
+    alignItems: "flex-start",
     marginBottom: 20,
   },
-  categoryCircle: {
-    alignItems: "center",
-    marginRight: 20,
-  },
-  circle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "#F5F5F5",
-    marginBottom: 8,
-  },
-  categoryLabel: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  taskCard: {
-    backgroundColor: "#F5F5F5",
-    marginHorizontal: 40,
-    padding: 20,
-    borderRadius: 20,
-    marginBottom: 15,
-  },
-  taskTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#2C003E",
-    marginBottom: 8,
-  },
-  taskDetails: {
-    fontSize: 14,
-    color: "#666",
-    fontWeight: "600",
-  },
-  emptyText: {
-    color: "#fff",
-    fontSize: 16,
-    textAlign: "center",
-    marginVertical: 20,
-    opacity: 0.7,
-  },
-  modalOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0,0,0,0.7)",
+  avatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#FF9500",
     justifyContent: "center",
     alignItems: "center",
   },
-  modalContent: {
-    backgroundColor: "#fff",
-    borderRadius: 20,
+  tabContainer: {
+    flexDirection: "row",
+    width: "100%",
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: "center",
+  },
+  activeTab: {
+    borderBottomWidth: 3,
+    borderBottomColor: "#FF9500",
+  },
+  tabText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#999",
+  },
+  activeTabText: {
+    color: "#000",
+  },
+  listContainer: {
     padding: 20,
-    width: "90%",
-    maxHeight: "80%",
+    paddingBottom: 100,
   },
-  modalTitle: {
-    fontSize: 24,
+  taskCard: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+    overflow: "hidden",
+    flexDirection: "row",
+  },
+  cardContent: {
+    flex: 1,
+    padding: 20,
+  },
+  taskTitle: {
+    fontSize: 18,
     fontWeight: "700",
-    color: "#2C003E",
-    marginBottom: 15,
-  },
-  modalBody: {
-    fontSize: 16,
-    color: "#666",
-    marginBottom: 15,
-    lineHeight: 24,
-  },
-  modalDetails: {
-    fontSize: 14,
-    color: "#888",
+    color: "#000",
     marginBottom: 8,
   },
-  closeButton: {
-    marginTop: 20,
-    padding: 15,
-    backgroundColor: "#2C003E",
-    borderRadius: 30,
-    alignItems: "center",
+  taskDescription: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 16,
+    lineHeight: 20,
   },
-  closeButtonText: {
+  taskMeta: {
+    gap: 8,
+  },
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  metaText: {
+    fontSize: 14,
+    color: "#666",
+  },
+  statusIndicator: {
+    width: 12,
+    borderTopRightRadius: 16,
+    borderBottomRightRadius: 16,
+  },
+  bottomButtonContainer: {
+    position: "absolute",
+    bottom: 90,
+    left: 20,
+    right: 20,
+  },
+  requestButton: {
+    backgroundColor: "#FF9500",
+    paddingVertical: 16,
+    borderRadius: 25,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  requestButtonText: {
     color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 18,
+    fontWeight: "700",
   },
-  cancelButton: {
-    marginTop: 10,
-    padding: 15,
-    backgroundColor: "#ccc",
-    borderRadius: 10,
+  emptyContainer: {
     alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 60,
   },
-  cancelButtonText: {
-    color: "#333",
+  emptyText: {
     fontSize: 16,
-    fontWeight: "600",
+    color: "#999",
+    marginTop: 16,
   },
 });
