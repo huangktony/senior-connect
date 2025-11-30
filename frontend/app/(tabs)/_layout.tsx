@@ -48,6 +48,14 @@ export default function TabsLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="Volunteer"
+        options={{
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="calendar" color={color} size={32} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

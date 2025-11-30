@@ -8,6 +8,11 @@ export interface Task {
   date: string;
   category: string;
   volunteerID: string;
+
+  address?: string;
+  startTime?: string;
+  endTime?: string;
+  elderName?: string;
 }
 
 export type TaskInput = Task;
