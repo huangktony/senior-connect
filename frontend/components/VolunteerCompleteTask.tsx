@@ -5,7 +5,10 @@ import {
   Pressable,
   StyleSheet,
   TextInput,
+  Image,
+  Alert,
 } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import type { Task } from "./types";
 
 type Props = {
@@ -13,8 +16,8 @@ type Props = {
   onBackToTask: () => void;
   onSubmitCompletion: (payload: {
     task: Task;
-    photoNote?: string;
-    receiptNote?: string;
+    photoUri?: string;
+    receiptUri?: string;
     comments?: string;
   }) => void;
 };
@@ -30,8 +33,8 @@ const VolunteerCompleteTask: React.FC<Props> = ({
   onSubmitCompletion,
 }) => {
   const [step, setStep] = useState<Step>(1);
-  const [photoNote, setPhotoNote] = useState("");
-  const [receiptNote, setReceiptNote] = useState("");
+  const [photoUri, setPhotoUri] = useState<string | undefined>();
+  const [receiptUri, setReceiptUri] = useState<string | undefined>();
   const [comments, setComments] = useState("");
 
   const goBack = () => {
@@ -46,7 +49,60 @@ const VolunteerCompleteTask: React.FC<Props> = ({
     if (step < 3) {
       setStep((step + 1) as Step);
     } else {
-      onSubmitCompletion({ task, photoNote, receiptNote, comments });
+      onSubmitCompletion({ task, photoUri, receiptUri, comments });
+    }
+  };
+
+  const ensureCameraPermission = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Camera permission required",
+        "Please enable camera access in your settings to take a photo."
+      );
+      return false;
+    }
+    return true;
+  };
+
+  const ensureMediaLibraryPermission = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Photo library permission required",
+        "Please enable photo library access in your settings to upload a receipt."
+      );
+      return false;
+    }
+    return true;
+  };
+
+  const handleTakeVolunteerPhoto = async () => {
+    const ok = await ensureCameraPermission();
+    if (!ok) return;
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets?.length) {
+      setPhotoUri(result.assets[0].uri);
+    }
+  };
+
+  const handlePickReceipt = async () => {
+    const ok = await ensureMediaLibraryPermission();
+    if (!ok) return;
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets?.length) {
+      setReceiptUri(result.assets[0].uri);
     }
   };
 
@@ -56,18 +112,17 @@ const VolunteerCompleteTask: React.FC<Props> = ({
         <>
           <Text style={styles.stepTitle}>Upload Photo</Text>
           <Text style={styles.stepSubtitle}>
-            Say cheese! Upload a photo of you volunteering.
+            Say cheese! Take a photo of you volunteering.
           </Text>
-          <Pressable
-            style={styles.box}
-            onPress={() => {
-              // TODO: hook up expo-image-picker or camera here
-              setPhotoNote("Photo attached (mock)");
-            }}
-          >
-            <Text style={styles.boxText}>
-              {photoNote ? photoNote : "Tap to attach a photo (later)"}
-            </Text>
+          <Pressable style={styles.box} onPress={handleTakeVolunteerPhoto}>
+            {photoUri ? (
+              <View style={styles.imageWrapper}>
+                <Image source={{ uri: photoUri }} style={styles.imagePreview} />
+                <Text style={styles.boxText}>Tap to retake photo</Text>
+              </View>
+            ) : (
+              <Text style={styles.boxText}>Tap to take a photo</Text>
+            )}
           </Pressable>
         </>
       );
@@ -80,16 +135,18 @@ const VolunteerCompleteTask: React.FC<Props> = ({
             Please upload an image of your receipt. Expect reimbursement in 2–5
             days.
           </Text>
-          <Pressable
-            style={styles.box}
-            onPress={() => {
-              // TODO: hook up receipt image picker
-              setReceiptNote("Receipt attached (mock)");
-            }}
-          >
-            <Text style={styles.boxText}>
-              {receiptNote ? receiptNote : "Tap to attach a receipt (later)"}
-            </Text>
+          <Pressable style={styles.box} onPress={handlePickReceipt}>
+            {receiptUri ? (
+              <View style={styles.imageWrapper}>
+                <Image
+                  source={{ uri: receiptUri }}
+                  style={styles.imagePreview}
+                />
+                <Text style={styles.boxText}>Tap to change receipt image</Text>
+              </View>
+            ) : (
+              <Text style={styles.boxText}>Tap to choose a receipt image</Text>
+            )}
           </Pressable>
         </>
       );
@@ -123,10 +180,7 @@ const VolunteerCompleteTask: React.FC<Props> = ({
         {[1, 2, 3].map((i) => (
           <View
             key={i}
-            style={[
-              styles.dot,
-              step === i && styles.dotActive,
-            ]}
+            style={[styles.dot, step === i && styles.dotActive]}
           />
         ))}
       </View>
@@ -164,8 +218,20 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#f3f3f3",
+    overflow: "hidden",
   },
   boxText: { color: "#777", paddingHorizontal: 16, textAlign: "center" },
+  imageWrapper: {
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  imagePreview: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+  },
   textArea: {
     height: 220,
     borderRadius: 16,
