@@ -5,16 +5,22 @@ import {
   TextInput,
   StyleSheet,
   TouchableOpacity,
-  Image,
+  ScrollView,
   Alert,
+  Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { auth } from "../firebaseConfig";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from "expo-router";
 
 export default function ElderProfile() {
   const [activeTab, setActiveTab] = useState("profile");
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userName, setUserName] = useState("Name");
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const router = useRouter();
   const [profile, setProfile] = useState({
     firstName: "",
     lastName: "",
@@ -50,7 +56,19 @@ export default function ElderProfile() {
           headers: { "ngrok-skip-browser-warning": "69420" },
         }
       );
-      const data = await response.json();
+      
+      if (!response.ok) {
+        console.log("Profile not found, using defaults");
+        return;
+      }
+      
+      const text = await response.text();
+      if (!text) {
+        console.log("Empty response, using defaults");
+        return;
+      }
+      
+      const data = JSON.parse(text);
       setProfile({
         firstName: data.firstName || "",
         lastName: data.lastName || "",
@@ -60,8 +78,12 @@ export default function ElderProfile() {
         state: data.state || "",
         zipCode: data.zipCode || "",
       });
+      if (data.firstName) {
+        setUserName(data.firstName);
+      }
     } catch (error) {
       console.error("Error fetching profile:", error);
+      // Just use empty defaults if profile doesn't exist yet
     }
   };
 
@@ -78,60 +100,132 @@ export default function ElderProfile() {
           body: JSON.stringify(profile),
         }
       );
-      Alert.alert("Profile saved!");
+      Alert.alert("Success", "Profile saved!");
+      if (profile.firstName) {
+        setUserName(profile.firstName);
+      }
     } catch (error) {
-      Alert.alert("Error saving profile");
+      Alert.alert("Error", "Failed to save profile");
     }
+  };
+
+  const pickImage = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (permissionResult.granted === false) {
+      Alert.alert("Permission Required", "You need to grant camera roll permissions to change your profile picture.");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setProfileImage(result.assets[0].uri);
+    }
+  };
+
+  const handleLogout = async () => {
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to logout?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await signOut(auth);
+              router.replace("/");
+            } catch (error) {
+              Alert.alert("Error", "Failed to logout");
+            }
+          }
+        }
+      ]
+    );
   };
 
   return (
     <View style={styles.container}>
-      {/* Header Section */}
-      <View style={styles.headerSection}>
-        <Image
-          source={require("../assets/images/Group_5.png")}
-          style={styles.logoIcon}
-          resizeMode="contain"
-        />
-
-        <View style={styles.profileRow}>
-          <View style={styles.avatarCircle} />
-          <View style={styles.buttonColumn}>
-            <TouchableOpacity 
-              style={[styles.tabButton, activeTab === "profile" && styles.activeTabButton]}
+      {/* Orange Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={pickImage} style={styles.avatarContainer}>
+          {profileImage ? (
+            <Image source={{ uri: profileImage }} style={styles.avatarImage} />
+          ) : (
+            <View style={styles.avatarPlaceholder}>
+              <Ionicons name="person" size={45} color="#FFA353" />
+            </View>
+          )}
+        </TouchableOpacity>
+        
+        <View style={styles.headerRight}>
+          <Text style={styles.nameText}>{userName}</Text>
+          <View style={styles.tabContainer}>
+            <TouchableOpacity
+              style={[
+                styles.tabButton,
+                activeTab === "profile" && styles.tabButtonActive,
+              ]}
               onPress={() => setActiveTab("profile")}
             >
-              <Text style={[styles.tabButtonText, activeTab === "profile" && styles.activeTabText]}>Profile</Text>
+              <Text
+                style={[
+                  styles.tabButtonText,
+                  activeTab === "profile" && styles.tabButtonTextActive,
+                ]}
+              >
+                Profile
+              </Text>
             </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.tabButton, activeTab === "payment" && styles.activePaymentButton]}
+            <TouchableOpacity
+              style={[
+                styles.tabButton,
+                activeTab === "payment" && styles.tabButtonActive,
+              ]}
               onPress={() => setActiveTab("payment")}
             >
-              <Text style={[styles.tabButtonText, activeTab === "payment" && styles.activeTabText]}>Payment</Text>
+              <Text
+                style={[
+                  styles.tabButtonText,
+                  activeTab === "payment" && styles.tabButtonTextActive,
+                ]}
+              >
+                Payment
+              </Text>
             </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            style={styles.editIcon}
-            onPress={handleSave}
-          >
-            <Ionicons
-              name="create-outline"
-              size={24}
-              color="#F5B041"
-            />
-          </TouchableOpacity>
         </View>
+        
+        <TouchableOpacity style={styles.editIcon} onPress={handleSave}>
+          <Ionicons name="pencil" size={24} color="#fff" />
+        </TouchableOpacity>
       </View>
 
-      {/* Form Section */}
-      <View style={styles.formSection}>
+      {/* White Content Section with Rounded Top */}
+      <ScrollView 
+        style={styles.contentSection}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+      >
         {activeTab === "profile" ? (
           <>
             <Text style={styles.label}>First Name</Text>
             <TextInput
               style={styles.input}
               value={profile.firstName}
-              onChangeText={(text) => setProfile({ ...profile, firstName: text })}
+              onChangeText={(text) =>
+                setProfile({ ...profile, firstName: text })
+              }
               placeholder="e.g. Jenelle"
               placeholderTextColor="#999"
             />
@@ -140,7 +234,9 @@ export default function ElderProfile() {
             <TextInput
               style={styles.input}
               value={profile.lastName}
-              onChangeText={(text) => setProfile({ ...profile, lastName: text })}
+              onChangeText={(text) =>
+                setProfile({ ...profile, lastName: text })
+              }
               placeholder="e.g. John"
               placeholderTextColor="#999"
             />
@@ -149,7 +245,9 @@ export default function ElderProfile() {
             <TextInput
               style={styles.input}
               value={profile.phoneNumber}
-              onChangeText={(text) => setProfile({ ...profile, phoneNumber: text })}
+              onChangeText={(text) =>
+                setProfile({ ...profile, phoneNumber: text })
+              }
               placeholder="e.g. 571-222-7629"
               placeholderTextColor="#999"
               keyboardType="phone-pad"
@@ -159,7 +257,9 @@ export default function ElderProfile() {
             <TextInput
               style={styles.input}
               value={profile.address}
-              onChangeText={(text) => setProfile({ ...profile, address: text })}
+              onChangeText={(text) =>
+                setProfile({ ...profile, address: text })
+              }
               placeholder="e.g. 1028 Street Street"
               placeholderTextColor="#999"
             />
@@ -179,7 +279,9 @@ export default function ElderProfile() {
                 <TextInput
                   style={styles.input}
                   value={profile.state}
-                  onChangeText={(text) => setProfile({ ...profile, state: text })}
+                  onChangeText={(text) =>
+                    setProfile({ ...profile, state: text })
+                  }
                   placeholder="TX"
                   placeholderTextColor="#999"
                 />
@@ -189,7 +291,9 @@ export default function ElderProfile() {
                 <TextInput
                   style={styles.input}
                   value={profile.zipCode}
-                  onChangeText={(text) => setProfile({ ...profile, zipCode: text })}
+                  onChangeText={(text) =>
+                    setProfile({ ...profile, zipCode: text })
+                  }
                   placeholder="77001"
                   placeholderTextColor="#999"
                   keyboardType="numeric"
@@ -203,7 +307,9 @@ export default function ElderProfile() {
             <TextInput
               style={styles.input}
               value={payment.cardNumber}
-              onChangeText={(text) => setPayment({ ...payment, cardNumber: text })}
+              onChangeText={(text) =>
+                setPayment({ ...payment, cardNumber: text })
+              }
               placeholder="e.g. XXXX-XXXX-XXXX-XXXX"
               placeholderTextColor="#999"
               keyboardType="numeric"
@@ -211,9 +317,11 @@ export default function ElderProfile() {
 
             <Text style={styles.label}>Expiration Date (MM/YY)</Text>
             <TextInput
-              style={[styles.input, { width: "50%" }]}
+              style={styles.input}
               value={payment.expiration}
-              onChangeText={(text) => setPayment({ ...payment, expiration: text })}
+              onChangeText={(text) =>
+                setPayment({ ...payment, expiration: text })
+              }
               placeholder="e.g. 03/25"
               placeholderTextColor="#999"
             />
@@ -222,23 +330,33 @@ export default function ElderProfile() {
             <TextInput
               style={styles.input}
               value={payment.nameOnCard}
-              onChangeText={(text) => setPayment({ ...payment, nameOnCard: text })}
+              onChangeText={(text) =>
+                setPayment({ ...payment, nameOnCard: text })
+              }
               placeholder="e.g. Jenelle James"
               placeholderTextColor="#999"
             />
 
             <Text style={styles.label}>Zip Code</Text>
             <TextInput
-              style={[styles.input, { width: "40%" }]}
+              style={styles.input}
               value={payment.zipCode}
-              onChangeText={(text) => setPayment({ ...payment, zipCode: text })}
+              onChangeText={(text) =>
+                setPayment({ ...payment, zipCode: text })
+              }
               placeholder="77001"
               placeholderTextColor="#999"
               keyboardType="numeric"
             />
           </>
         )}
-      </View>
+        
+        {/* Logout Button */}
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Ionicons name="log-out-outline" size={20} color="#fff" />
+          <Text style={styles.logoutButtonText}>Logout</Text>
+        </TouchableOpacity>
+      </ScrollView>
     </View>
   );
 }
@@ -246,86 +364,124 @@ export default function ElderProfile() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#7B3B7A",
+    backgroundColor: "#fff",
     paddingBottom: 70,
   },
-  headerSection: {
-    backgroundColor: "#F5F5F5",
-    paddingTop: 40,
+  header: {
+    backgroundColor: "#FFA353",
+    paddingTop: 70,
+    paddingBottom: 55,
     paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  logoIcon: {
-    width: 50,
-    height: 50,
-    marginBottom: 10,
-  },
-  profileRow: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    gap: 30,
   },
-  avatarCircle: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: "#F5B041",
+  avatarContainer: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
   },
-  buttonColumn: {
-    marginLeft: 15,
-    flex: 1,
+  avatarPlaceholder: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  avatarImage: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+  },
+  headerRight: {
+    justifyContent: "center",
+  },
+  nameText: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#fff",
+    marginBottom: 10,
+  },
+  tabContainer: {
+    flexDirection: "row",
+    gap: 8,
   },
   tabButton: {
-    backgroundColor: "#E0E0E0",
-    paddingVertical: 8,
+    backgroundColor: "#fff",
+    paddingVertical: 6,
+    paddingHorizontal: 18,
     borderRadius: 20,
-    marginBottom: 6,
-    alignItems: "center",
-    width: "100%",
   },
-  activeTabButton: {
-    backgroundColor: "#F5B041",
-  },
-  activePaymentButton: {
-    backgroundColor: "#F5B041",
+  tabButtonActive: {
+    backgroundColor: "#7C3B7A",
   },
   tabButtonText: {
-    color: "#666",
+    color: "#7C3B7A",
     fontSize: 14,
     fontWeight: "600",
   },
-  activeTabText: {
+  tabButtonTextActive: {
     color: "#fff",
   },
   editIcon: {
-    padding: 10,
+    position: "absolute",
+    top: 50,
+    right: 20,
+    padding: 8,
   },
-  formSection: {
+  contentSection: {
     flex: 1,
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    marginTop: -25,
+  },
+  contentContainer: {
     paddingHorizontal: 20,
-    paddingTop: 15,
-    width: "100%",
+    paddingTop: 30,
+    paddingBottom: 20,
   },
   label: {
-    color: "#FFFFFF",
-    fontSize: 12,
+    fontSize: 15,
     fontWeight: "600",
-    marginBottom: 4,
+    color: "#000",
+    marginBottom: 6,
+    marginTop: 5,
   },
   input: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    marginBottom: 10,
+    backgroundColor: "#F8F8F8",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
     color: "#333",
-    width: "100%",
+    marginBottom: 3,
   },
   rowInputs: {
     flexDirection: "row",
     justifyContent: "space-between",
+    gap: 15,
   },
   halfInput: {
-    width: "48%",
+    flex: 1,
+  },
+  logoutButton: {
+    backgroundColor: "#DC3545",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 25,
+    marginTop: 27,
+    marginBottom: 10,
+    marginHorizontal: 40,
+  },
+  logoutButtonText: {
+    color: "#fff",
+    fontSize: 17,
+    fontWeight: "700",
   },
 });
