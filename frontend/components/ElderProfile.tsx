@@ -11,14 +11,16 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { auth } from "../firebaseConfig";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from "expo-router";
 
 export default function ElderProfile() {
   const [activeTab, setActiveTab] = useState("profile");
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userName, setUserName] = useState("Name");
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const router = useRouter();
   const [profile, setProfile] = useState({
     firstName: "",
     lastName: "",
@@ -54,7 +56,19 @@ export default function ElderProfile() {
           headers: { "ngrok-skip-browser-warning": "69420" },
         }
       );
-      const data = await response.json();
+      
+      if (!response.ok) {
+        console.log("Profile not found, using defaults");
+        return;
+      }
+      
+      const text = await response.text();
+      if (!text) {
+        console.log("Empty response, using defaults");
+        return;
+      }
+      
+      const data = JSON.parse(text);
       setProfile({
         firstName: data.firstName || "",
         lastName: data.lastName || "",
@@ -69,6 +83,7 @@ export default function ElderProfile() {
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
+      // Just use empty defaults if profile doesn't exist yet
     }
   };
 
@@ -85,17 +100,16 @@ export default function ElderProfile() {
           body: JSON.stringify(profile),
         }
       );
-      Alert.alert("Profile saved!");
+      Alert.alert("Success", "Profile saved!");
       if (profile.firstName) {
         setUserName(profile.firstName);
       }
     } catch (error) {
-      Alert.alert("Error saving profile");
+      Alert.alert("Error", "Failed to save profile");
     }
   };
 
   const pickImage = async () => {
-    // Request permission
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
     if (permissionResult.granted === false) {
@@ -103,7 +117,6 @@ export default function ElderProfile() {
       return;
     }
 
-    // Launch image picker
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -116,65 +129,92 @@ export default function ElderProfile() {
     }
   };
 
+  const handleLogout = async () => {
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to logout?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await signOut(auth);
+              router.replace("/");
+            } catch (error) {
+              Alert.alert("Error", "Failed to logout");
+            }
+          }
+        }
+      ]
+    );
+  };
+
   return (
     <View style={styles.container}>
-      {/* Header Section */}
+      {/* Orange Header */}
       <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <TouchableOpacity onPress={pickImage} style={styles.avatarCircle}>
-            {profileImage ? (
-              <Image source={{ uri: profileImage }} style={styles.avatarImage} />
-            ) : (
-              <Ionicons name="person" size={40} color="#FFA353" />
-            )}
-          </TouchableOpacity>
-          <View style={styles.nameAndTabs}>
-            <Text style={styles.nameText}>{userName}</Text>
-            <View style={styles.tabContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.tabButton,
-                  activeTab === "profile" && styles.tabButtonActive,
-                ]}
-                onPress={() => setActiveTab("profile")}
-              >
-                <Text
-                  style={[
-                    styles.tabButtonText,
-                    activeTab === "profile" && styles.tabButtonTextActive,
-                  ]}
-                >
-                  Profile
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.tabButton,
-                  activeTab === "payment" && styles.tabButtonActive,
-                ]}
-                onPress={() => setActiveTab("payment")}
-              >
-                <Text
-                  style={[
-                    styles.tabButtonText,
-                    activeTab === "payment" && styles.tabButtonTextActive,
-                  ]}
-                >
-                  Payment
-                </Text>
-              </TouchableOpacity>
+        <TouchableOpacity onPress={pickImage} style={styles.avatarContainer}>
+          {profileImage ? (
+            <Image source={{ uri: profileImage }} style={styles.avatarImage} />
+          ) : (
+            <View style={styles.avatarPlaceholder}>
+              <Ionicons name="person" size={45} color="#FFA353" />
             </View>
+          )}
+        </TouchableOpacity>
+        
+        <View style={styles.headerRight}>
+          <Text style={styles.nameText}>{userName}</Text>
+          <View style={styles.tabContainer}>
+            <TouchableOpacity
+              style={[
+                styles.tabButton,
+                activeTab === "profile" && styles.tabButtonActive,
+              ]}
+              onPress={() => setActiveTab("profile")}
+            >
+              <Text
+                style={[
+                  styles.tabButtonText,
+                  activeTab === "profile" && styles.tabButtonTextActive,
+                ]}
+              >
+                Profile
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.tabButton,
+                activeTab === "payment" && styles.tabButtonActive,
+              ]}
+              onPress={() => setActiveTab("payment")}
+            >
+              <Text
+                style={[
+                  styles.tabButtonText,
+                  activeTab === "payment" && styles.tabButtonTextActive,
+                ]}
+              >
+                Payment
+              </Text>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity style={styles.editIcon} onPress={handleSave}>
-            <Ionicons name="pencil" size={24} color="#fff" />
-          </TouchableOpacity>
         </View>
+        
+        <TouchableOpacity style={styles.editIcon} onPress={handleSave}>
+          <Ionicons name="pencil" size={24} color="#fff" />
+        </TouchableOpacity>
       </View>
 
-      {/* Form Section */}
+      {/* White Content Section with Rounded Top */}
       <ScrollView 
-        style={styles.formSection}
-        contentContainerStyle={styles.formContent}
+        style={styles.contentSection}
+        contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
         {activeTab === "profile" ? (
@@ -310,6 +350,12 @@ export default function ElderProfile() {
             />
           </>
         )}
+        
+        {/* Logout Button */}
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Ionicons name="log-out-outline" size={20} color="#fff" />
+          <Text style={styles.logoutButtonText}>Logout</Text>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -323,30 +369,34 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: "#FFA353",
-    paddingTop: 60,
-    paddingBottom: 50,
+    paddingTop: 70,
+    paddingBottom: 55,
     paddingHorizontal: 20,
-  },
-  headerContent: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 15,
+    justifyContent: "center",
+    gap: 30,
   },
-  avatarCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+  avatarContainer: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+  },
+  avatarPlaceholder: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
     backgroundColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
   },
   avatarImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
   },
-  nameAndTabs: {
-    flex: 1,
+  headerRight: {
+    justifyContent: "center",
   },
   nameText: {
     fontSize: 24,
@@ -356,12 +406,12 @@ const styles = StyleSheet.create({
   },
   tabContainer: {
     flexDirection: "row",
-    gap: 10,
+    gap: 8,
   },
   tabButton: {
     backgroundColor: "#fff",
-    paddingVertical: 8,
-    paddingHorizontal: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 18,
     borderRadius: 20,
   },
   tabButtonActive: {
@@ -376,35 +426,38 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   editIcon: {
+    position: "absolute",
+    top: 50,
+    right: 20,
     padding: 8,
   },
-  formSection: {
+  contentSection: {
     flex: 1,
     backgroundColor: "#fff",
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
-    marginTop: -20,
+    marginTop: -25,
   },
-  formContent: {
+  contentContainer: {
     paddingHorizontal: 20,
-    paddingTop: 25,
-    paddingBottom: 30,
+    paddingTop: 30,
+    paddingBottom: 20,
   },
   label: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "600",
     color: "#000",
-    marginBottom: 8,
-    marginTop: 10,
+    marginBottom: 6,
+    marginTop: 5,
   },
   input: {
-    backgroundColor: "#F0F0F0",
+    backgroundColor: "#F8F8F8",
     borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 12,
     fontSize: 16,
     color: "#333",
-    marginBottom: 5,
+    marginBottom: 3,
   },
   rowInputs: {
     flexDirection: "row",
@@ -413,5 +466,22 @@ const styles = StyleSheet.create({
   },
   halfInput: {
     flex: 1,
+  },
+  logoutButton: {
+    backgroundColor: "#DC3545",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 25,
+    marginTop: 27,
+    marginBottom: 10,
+    marginHorizontal: 40,
+  },
+  logoutButtonText: {
+    color: "#fff",
+    fontSize: 17,
+    fontWeight: "700",
   },
 });
