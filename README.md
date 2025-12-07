@@ -81,13 +81,6 @@ Caretakers are overburdened. Volunteers are available, but there's **no trusted 
 
 Watch our full demo of **Opal** in action:
 
-<p align="center">
-  <a href="YOUTUBE_LINK_HERE" target="_blank">
-    <img src="https://img.youtube.com/vi/YOUTUBE_VIDEO_ID/maxresdefault.jpg" 
-         alt="Opal Demo Video" width="600"/>
-  </a>
-</p>
-
 🔗 **YouTube:** https://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID
 
 
