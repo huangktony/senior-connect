@@ -53,13 +53,11 @@ Caretakers are overburdened. Volunteers are available, but there's **no trusted 
 - React Native (Expo)  
 - Expo Speech Recognition  
 - Firebase Authentication  
-- Gemini API for voice-based task creation  
 
 ### **Backend**
 - Flask (Python)  
-- Government ID verification  
-- Task/volunteer management  
-- REST API services  
+- Task/volunteer management
+- Gemini API for voice-based task creation  
 
 ### **Cloud Infrastructure**
 - Firebase Firestore (users, tasks, approvals)  
