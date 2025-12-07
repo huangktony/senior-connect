@@ -54,14 +54,10 @@ Caretakers are overburdened. Volunteers are available, but there's **no trusted 
 - Expo Speech Recognition  
 - Firebase Authentication  
 
-### **Backend**
+### **Backend/Database**
 - Flask (Python)  
-- Task/volunteer management
+- Firebase/Firestore for task/volunteer management and authentication
 - Gemini API for voice-based task creation  
-
-### **Cloud Infrastructure**
-- Firebase Firestore (users, tasks, approvals)  
-- Firebase Storage (proof images)  
 
 ---
 
